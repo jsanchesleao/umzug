@@ -82,9 +82,12 @@ Resolved per SPEC §8.6: photos are in scope for v1, not deferred. Kept as its o
 - [x] Photos gallery on the case file.
 - [x] "Include photos" checkbox on export (default off for bulk, on for single-apartment), base64 data-URL embedding.
 
+## Post-v1
+
+- [x] Peer-to-peer transfer between devices (§4.6a): PeerJS/WebRTC data channel paired via QR code (or a manual code/link fallback), reusing the §4.6 export/import schema and pipeline unchanged.
+
 ## Deferred / Out of Scope (per §7)
 
-- QR-code transfer between devices (needs its own design spike — pairing handshake, not direct data encoding).
 - Multi-user / sync / cloud backup.
 - Multi-currency support.
 

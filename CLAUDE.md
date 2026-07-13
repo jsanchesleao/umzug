@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project
 
-Umzug is a client-only Progressive Web App for tracking apartments during a rental search (a "case file" per apartment: status, timeline of events, and follow-up actions). No backend, no auth, no analytics — all data lives on-device in IndexedDB, with JSON import/export as the only transfer mechanism. Deployed as a static site to GitHub Pages.
+Umzug is a client-only Progressive Web App for tracking apartments during a rental search (a "case file" per apartment: status, timeline of events, and follow-up actions). No backend, no auth, no analytics — all data lives on-device in IndexedDB. Data moves between devices via JSON file import/export, or directly device-to-device over a PeerJS/WebRTC connection paired with a QR code. Deployed as a static site to GitHub Pages.
 
 Full product/data-model spec: `SPEC.md`. Milestone tracker (what's shipped vs. outstanding): `ROADMAP.md` — all milestones (0–9) are complete; check it before assuming a feature is unbuilt.
 
@@ -36,6 +36,8 @@ The Dexie schema is versioned in `db.ts` (`version(1)`, then `version(2)` with a
 - `normalizeLegacyRent` upconverts older exports that still carry a single `rentCost` field.
 - Photo data-URL → `Blob` conversion (`dataUrlToBlob`, uses `fetch()`) happens *before* the Dexie `transaction(...)` block opens — awaiting a non-Dexie-tracked promise inside a Dexie transaction causes it to auto-commit early.
 - Import is all-or-nothing per file; a single `overwrite`/`copy` collision-resolution choice applies to every colliding apartment in that batch.
+
+**Peer-to-peer transfer** (`src/data/p2p.ts`, `SPEC.md` §4.6a) layers a PeerJS/WebRTC data channel on top of the same `ExportedApartment` schema instead of inventing a new payload format — the sender `JSON.stringify`s the same export shape used by file export and sends it over the data channel; the receiver runs it through the *same* `parseImportPayload`/`detectCollisions`/`importApartments` pipeline used for file import, unchanged. A QR code (or manual code/link fallback) is only ever a pairing handshake — it encodes a short peer ID, never the apartment data itself. Only that ephemeral pairing metadata touches PeerJS's public signaling broker; the actual data flows directly between the two devices over an encrypted WebRTC channel and never touches the broker, which is the one place this app's "no backend, all data on-device" positioning brushes up against a third party.
 
 **UI structure.** `src/pages/` holds the two route-level components; `src/components/` holds the Kanban board, per-entity modals/forms (apartment, timeline event, action, photo), and shared UI (Modal, ConfirmDialog, StatusBadge); `src/utils/` holds form-state/validation helpers per entity plus `date.ts`/`rent.ts`/`image.ts`. All entity types and enums (`ApartmentStatus`, `ActionUrgency`, `ActionStatus`, plus their label maps and list constants) live in `src/types.ts`.
 

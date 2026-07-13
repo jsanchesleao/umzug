@@ -190,6 +190,15 @@ Two stacked sections plus a floating action button.
 - Given a bulk export of N apartments, when imported into an empty database, then exactly N apartments (with all nested events/actions) exist afterward.
 - Given a malformed/non-matching JSON file is selected, when import is attempted, then the app shows an error and makes no database changes (all-or-nothing per file).
 
+### 4.6a Peer-to-Peer Transfer (PeerJS + QR pairing)
+
+Direct device-to-device transfer, layered on top of the same export/import schema (§4.6) so no new payload format exists — a QR code is used only as a pairing handshake, never to encode data directly (see §7 history).
+
+- **Pairing:** the sending device ("host") generates a short 6-character code and registers it with PeerJS's public signaling broker; it displays a QR code (encoding a link with the code), the plain code, and a copyable link. The receiving device ("guest") obtains the code by scanning the QR, pasting the link, or typing the code manually, then dials the host directly over WebRTC.
+- **Scope:** sender chooses, at share time, between sending a single apartment (mirrors §4.6's single-apartment export) or all apartments (mirrors bulk export).
+- **Data path:** once the WebRTC data channel opens, the host sends the same JSON shape as a file export; the guest runs it through the same `parseImportPayload`/`detectCollisions`/`importApartments` pipeline used for file import, including the same overwrite/copy collision prompt. The host receives an acknowledgement so it can show a real outcome rather than a blind "sent".
+- **Trade-off:** only ephemeral pairing metadata (short-lived peer IDs) touches PeerJS's public broker for signaling; the apartment data itself flows directly between the two devices over an encrypted WebRTC channel and never touches that broker or any other third party.
+
 ### 4.7 Photos (feasibility note + scope)
 
 IndexedDB supports storing `Blob`/`File` values directly (structured-clone algorithm), so photos can be attached to an apartment without base64-encoding overhead in the local database — this is viable and is the recommended storage approach (a `photos` object store, per §3.3).
@@ -219,7 +228,7 @@ Constraints to build in regardless of whether this ships in v1:
 
 ## 7. Out of Scope / Future Work
 
-- **QR-code transfer between desktop and mobile PWA**, mentioned in the original pitch, is deferred: a QR code cannot hold a meaningful JSON payload (even one apartment with a timeline typically exceeds practical QR capacity), so this needs its own design spike — e.g. QR as a pairing handshake for a WebRTC/local-network transfer channel, rather than encoding data directly. JSON file import/export (§4.6) is the supported transfer mechanism for v1.
+- ~~QR-code transfer between desktop and mobile PWA~~ — shipped as §4.6a: QR is used as a pairing handshake for a PeerJS/WebRTC transfer channel (not to encode data directly, since a QR code can't hold a meaningful JSON payload), reusing the §4.6 export/import schema and pipeline unchanged.
 - Multi-user / sync / cloud backup.
 - Currency handling beyond a plain number (see §8).
 

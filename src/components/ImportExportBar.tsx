@@ -1,15 +1,18 @@
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import {
   buildAllApartmentsExport,
+  describeOutcome,
   detectCollisions,
   downloadJson,
   importApartments,
   parseImportPayload,
   type CollisionResolution,
   type ExportedApartment,
-  type ImportOutcome,
 } from "../data/importExport";
 import ImportCollisionDialog from "./ImportCollisionDialog";
+import P2PSendModal from "./P2PSendModal";
+import P2PReceiveModal from "./P2PReceiveModal";
 
 type Status = { type: "error" | "success"; message: string } | null;
 
@@ -18,19 +21,31 @@ interface PendingImport {
   collisionCount: number;
 }
 
-function describeOutcome(outcome: ImportOutcome): string {
-  const parts: string[] = [];
-  if (outcome.inserted) parts.push(`${outcome.inserted} imported`);
-  if (outcome.copied) parts.push(`${outcome.copied} imported as ${outcome.copied === 1 ? "a copy" : "copies"}`);
-  if (outcome.overwritten) parts.push(`${outcome.overwritten} overwritten`);
-  return parts.length > 0 ? `${parts.join(", ")}.` : "Nothing to import.";
-}
-
 function ImportExportBar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
   const [includePhotos, setIncludePhotos] = useState(false);
+  const [p2pModal, setP2PModal] = useState<"send" | "receive" | null>(null);
+  const [initialPairingCode, setInitialPairingCode] = useState<string | undefined>(undefined);
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // A scanned QR code deep-links back into the app with ?p2p=<code>; open the
+  // Receive modal pre-filled with it and strip the param so a reload/back
+  // navigation doesn't reopen it.
+  useEffect(() => {
+    const code = searchParams.get("p2p");
+    if (code) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to an external system (the URL) on mount, not deriving render state
+      setInitialPairingCode(code);
+      setP2PModal("receive");
+      setSearchParams((params) => {
+        params.delete("p2p");
+        return params;
+      }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleExportAll() {
     const apartments = await buildAllApartmentsExport(includePhotos);
@@ -98,6 +113,19 @@ function ImportExportBar() {
       <button type="button" className="btn btn-sm" onClick={() => fileInputRef.current?.click()}>
         Import
       </button>
+      <button type="button" className="btn btn-sm" onClick={() => setP2PModal("send")}>
+        Send (all)
+      </button>
+      <button
+        type="button"
+        className="btn btn-sm"
+        onClick={() => {
+          setInitialPairingCode(undefined);
+          setP2PModal("receive");
+        }}
+      >
+        Receive
+      </button>
       <input
         ref={fileInputRef}
         type="file"
@@ -127,6 +155,13 @@ function ImportExportBar() {
           onResolve={handleResolveCollisions}
           onCancel={() => setPendingImport(null)}
         />
+      )}
+
+      {p2pModal === "send" && (
+        <P2PSendModal scope="all" onClose={() => setP2PModal(null)} />
+      )}
+      {p2pModal === "receive" && (
+        <P2PReceiveModal initialCode={initialPairingCode} onClose={() => setP2PModal(null)} />
       )}
     </div>
   );

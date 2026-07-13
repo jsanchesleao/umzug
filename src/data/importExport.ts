@@ -279,6 +279,14 @@ export interface ImportOutcome {
   copied: number;
 }
 
+export function describeOutcome(outcome: ImportOutcome): string {
+  const parts: string[] = [];
+  if (outcome.inserted) parts.push(`${outcome.inserted} imported`);
+  if (outcome.copied) parts.push(`${outcome.copied} imported as ${outcome.copied === 1 ? "a copy" : "copies"}`);
+  if (outcome.overwritten) parts.push(`${outcome.overwritten} overwritten`);
+  return parts.length > 0 ? `${parts.join(", ")}.` : "Nothing to import.";
+}
+
 /**
  * Imports apartments in a single all-or-nothing transaction. `resolution`
  * applies to every colliding apartment in this batch (a single prompt covers

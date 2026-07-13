@@ -5,6 +5,7 @@ import { deleteApartmentCascade, getApartment, updateApartment } from "../data/a
 import { listActionsForApartment } from "../data/actions";
 import { buildApartmentExport, downloadJson } from "../data/importExport";
 import ApartmentModal from "../components/ApartmentModal";
+import P2PSendModal from "../components/P2PSendModal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import StatusBadge from "../components/StatusBadge";
 import UnresolvedActionsSummary from "../components/UnresolvedActionsSummary";
@@ -29,6 +30,7 @@ function ApartmentDetail() {
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [includePhotosInExport, setIncludePhotosInExport] = useState(true);
+  const [sendingP2P, setSendingP2P] = useState(false);
   const [notes, setNotes] = useState("");
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
@@ -121,6 +123,9 @@ function ApartmentDetail() {
                 />
                 Include photos
               </label>
+              <button type="button" className="btn" onClick={() => setSendingP2P(true)}>
+                Send this apartment
+              </button>
               <button
                 type="button"
                 className="btn btn-danger"
@@ -172,6 +177,14 @@ function ApartmentDetail() {
       </div>
 
       {editing && <ApartmentModal apartment={apartment} onClose={() => setEditing(false)} />}
+
+      {sendingP2P && (
+        <P2PSendModal
+          scope="apartment"
+          apartmentId={apartment.id}
+          onClose={() => setSendingP2P(false)}
+        />
+      )}
 
       {confirmingDelete && (
         <ConfirmDialog
