@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { deleteApartmentCascade, getApartment, updateApartment } from "../data/apartments";
@@ -35,6 +35,11 @@ function ApartmentDetail() {
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
   const [syncedApartmentId, setSyncedApartmentId] = useState<string | null>(null);
+  const menuRef = useRef<HTMLDetailsElement>(null);
+
+  function closeMenu() {
+    if (menuRef.current) menuRef.current.open = false;
+  }
 
   // Reset the notes draft whenever a (new) apartment record loads, unless the
   // user already has unsaved edits in progress. Adjusting state during render
@@ -84,8 +89,68 @@ function ApartmentDetail() {
       <div className="case-file-grid">
         <div className="case-file-col-left">
           <header className="case-file-header">
-            <h1>{apartment.title}</h1>
-            <StatusBadge status={apartment.status} />
+            <div className="case-file-title-row">
+              <div className="case-file-title-group">
+                <h1>{apartment.title}</h1>
+                <StatusBadge status={apartment.status} />
+              </div>
+
+              <details className="status-menu" ref={menuRef}>
+                <summary className="status-menu-trigger" aria-label="Apartment actions">
+                  ⋮
+                </summary>
+                <div className="status-menu-list case-file-menu-list">
+                  <button
+                    type="button"
+                    className="status-menu-option"
+                    onClick={() => {
+                      setEditing(true);
+                      closeMenu();
+                    }}
+                  >
+                    Edit
+                  </button>
+                  <button
+                    type="button"
+                    className="status-menu-option"
+                    onClick={() => {
+                      handleExport();
+                      closeMenu();
+                    }}
+                  >
+                    Export this file
+                  </button>
+                  <label className="case-file-menu-checkbox">
+                    <input
+                      type="checkbox"
+                      checked={includePhotosInExport}
+                      onChange={(e) => setIncludePhotosInExport(e.target.checked)}
+                    />
+                    Include photos
+                  </label>
+                  <button
+                    type="button"
+                    className="status-menu-option"
+                    onClick={() => {
+                      setSendingP2P(true);
+                      closeMenu();
+                    }}
+                  >
+                    Send this apartment
+                  </button>
+                  <button
+                    type="button"
+                    className="status-menu-option danger"
+                    onClick={() => {
+                      setConfirmingDelete(true);
+                      closeMenu();
+                    }}
+                  >
+                    Delete
+                  </button>
+                </div>
+              </details>
+            </div>
 
             <div className="case-file-meta">
               {apartment.address && <div>Address: {apartment.address}</div>}
@@ -107,33 +172,6 @@ function ApartmentDetail() {
                 <div>Visit address: {apartment.visitAddress}</div>
               </div>
             )}
-
-            <div className="case-file-actions">
-              <button type="button" className="btn" onClick={() => setEditing(true)}>
-                Edit
-              </button>
-              <button type="button" className="btn" onClick={handleExport}>
-                Export this file
-              </button>
-              <label className="filter-checkbox">
-                <input
-                  type="checkbox"
-                  checked={includePhotosInExport}
-                  onChange={(e) => setIncludePhotosInExport(e.target.checked)}
-                />
-                Include photos
-              </label>
-              <button type="button" className="btn" onClick={() => setSendingP2P(true)}>
-                Send this apartment
-              </button>
-              <button
-                type="button"
-                className="btn btn-danger"
-                onClick={() => setConfirmingDelete(true)}
-              >
-                Delete
-              </button>
-            </div>
 
             <UnresolvedActionsSummary apartmentId={apartment.id} />
           </header>
