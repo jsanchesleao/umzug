@@ -7,36 +7,36 @@ Derived from `SPEC.md`. Organized as sequential milestones; each builds on the l
 Blocking, do first — cheap to fix now, expensive after UI/data model are built on top of wrong assumptions.
 
 - [x] Resolve open questions from §8 with product owner (urgency scale naming, rent currency, visit-address behavior, import-collision default, timeline order, photos in/out of v1). Bake final answers back into SPEC.md.
-- [ ] Scaffold Vite + React + TypeScript project.
-- [ ] Set up `react-router` (or equivalent) with the two top-level routes (`/`, `/apartments/:id`), stubbed with placeholder pages.
-- [ ] Configure Vite `base` for the target GitHub Pages path; confirm dev build serves correctly from a subpath.
-- [ ] Set up linting/formatting and a minimal CI check (build + typecheck) — not in spec explicitly but de-risks everything downstream.
+- [x] Scaffold Vite + React + TypeScript project.
+- [x] Set up `react-router` (or equivalent) with the two top-level routes (`/`, `/apartments/:id`), stubbed with placeholder pages.
+- [x] Configure Vite `base` for the target GitHub Pages path; confirm dev build serves correctly from a subpath.
+- [x] Set up linting/formatting and a minimal CI check (build + typecheck) — not in spec explicitly but de-risks everything downstream.
 
 ## Milestone 1 — Data Layer
 
 Everything else depends on this being solid, since schema mistakes are expensive to migrate later.
 
-- [ ] Define TypeScript types for all entities/enums (§3.1, §3.2).
-- [ ] Set up Dexie.js schema: `apartments`, `timelineEvents`, `actions`, `photos` stores, indexed on `apartmentId` (and `eventId` on `actions`) (§3.3).
-- [ ] Write a thin data-access layer (CRUD functions per entity) — keeps components decoupled from Dexie calls directly.
-- [ ] Write the "unresolved actions across all apartments, sorted by urgency desc / dueDate asc" query — this is the one query the whole schema is optimized for; validate it works as a single indexed query.
-- [ ] Cascade-delete logic: deleting an apartment removes its events, actions, photos.
+- [x] Define TypeScript types for all entities/enums (§3.1, §3.2).
+- [x] Set up Dexie.js schema: `apartments`, `timelineEvents`, `actions`, `photos` stores, indexed on `apartmentId` (and `eventId` on `actions`) (§3.3).
+- [x] Write a thin data-access layer (CRUD functions per entity) — keeps components decoupled from Dexie calls directly.
+- [x] Write the "unresolved actions across all apartments, sorted by urgency desc / dueDate asc" query — this is the one query the whole schema is optimized for; validate it works as a single indexed query.
+- [x] Cascade-delete logic: deleting an apartment removes its events, actions, photos.
 
 ## Milestone 2 — Apartment CRUD & Dashboard Shell
 
-- [ ] Add/Edit Apartment modal (§4.3): fields, validation (required fields, positive rent, valid URL, conditional visit fields), create/update wiring to Dexie.
-- [ ] Dashboard Kanban board (§4.1B): 6 status columns, apartment cards (address, rent, entry date, status-specific detail, unresolved-actions badge).
-- [ ] Desktop layout: all 6 columns side by side.
-- [ ] Mobile layout: single-column view with a column switcher (tab bar/dropdown).
-- [ ] Floating action button opening the Add Apartment modal (§4.1C).
-- [ ] Status-change control for mobile (non-drag-and-drop path) — build this before drag-and-drop so status transitions work everywhere from day one.
+- [x] Add/Edit Apartment modal (§4.3): fields, validation (required fields, positive rent, valid URL, conditional visit fields), create/update wiring to Dexie.
+- [x] Dashboard Kanban board (§4.1B): 6 status columns, apartment cards (address, rent, entry date, status-specific detail, unresolved-actions badge).
+- [x] Desktop layout: all 6 columns side by side.
+- [x] Mobile layout: single-column view with a column switcher (tab bar/dropdown).
+- [x] Floating action button opening the Add Apartment modal (§4.1C).
+- [x] Status-change control for mobile (non-drag-and-drop path) — build this before drag-and-drop so status transitions work everywhere from day one.
 
 ## Milestone 3 — Apartment Case File
 
-- [ ] Case file route (§4.2): header (address, status badge, rent, link, entry date), conditional visit-info block.
-- [ ] Edit and Delete controls (delete requires confirmation + cascade, per Milestone 1's cascade logic).
-- [ ] Notes section (plain text editable).
-- [ ] Wire "Add Apartment" modal for edit mode reuse (same form, pre-filled).
+- [x] Case file route (§4.2): header (address, status badge, rent, link, entry date), conditional visit-info block.
+- [x] Edit and Delete controls (delete requires confirmation + cascade, per Milestone 1's cascade logic).
+- [x] Notes section (plain text editable).
+- [x] Wire "Add Apartment" modal for edit mode reuse (same form, pre-filled).
 
 ## Milestone 4 — Timeline & Actions
 

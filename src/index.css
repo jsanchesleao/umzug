@@ -1,0 +1,560 @@
+:root {
+  color-scheme: dark;
+
+  /* Backgrounds (layered warm dark brown/near-black) */
+  --color-bg: #17120f;
+  --color-bg-raised: #1f1a15;
+  --color-surface: #2a2119;
+  --color-card: #2f241c;
+  --color-card-tape: rgba(150, 140, 120, 0.28);
+
+  --color-border: #4a3d30;
+  --color-border-strong: #6b5842;
+
+  --color-text: #ede4d3;
+  --color-text-strong: #fbf3e3;
+  --color-muted: #9c8f7a;
+
+  --color-primary: #c96f3c;
+  --color-primary-text: #1a1310;
+  --color-danger: #b0473d;
+  --color-danger-text: #f5e9e4;
+  --color-info: #5a8fae;
+  --color-info-bg: rgba(90, 143, 174, 0.16);
+  --color-amber: #c99a3c;
+  --color-amber-bg: rgba(201, 154, 60, 0.14);
+
+  --status-awaitingvisitation: #8a7d68;
+  --status-visitscheduled: #5f9e6f;
+  --status-visited: #5a8fae;
+  --status-awaitingresponse: #c99a3c;
+  --status-confirmed: #6fae7a;
+  --status-cancelled: #7a6b5c;
+
+  --radius: 4px;
+  --radius-sm: 2px;
+
+  --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
+  --font-mono:
+    "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-mono);
+  background: var(--color-bg);
+  color: var(--color-text);
+}
+
+h1,
+h2,
+h3 {
+  margin: 0 0 0.5em;
+  font-family: var(--font-serif);
+  color: var(--color-text-strong);
+}
+
+a {
+  color: var(--color-primary);
+  text-decoration: none;
+}
+
+a:hover {
+  text-decoration: underline;
+}
+
+button {
+  font: inherit;
+}
+
+.btn {
+  padding: 0.5em 1em;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text);
+  cursor: pointer;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.btn:hover {
+  background: var(--color-bg-raised);
+}
+
+.btn-primary {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.btn-primary:hover {
+  background: var(--color-amber-bg);
+}
+
+.btn-danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+
+.btn-danger:hover {
+  background: rgba(176, 71, 61, 0.14);
+}
+
+/* Dashboard */
+
+.dashboard {
+  padding: 1rem;
+  padding-bottom: 5rem;
+}
+
+.kanban-tabs {
+  display: none;
+  gap: 0.5rem;
+  overflow-x: auto;
+  margin-bottom: 1rem;
+}
+
+.kanban-tab {
+  flex: none;
+  padding: 0.5em 0.75em;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  white-space: nowrap;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.kanban-tab.active {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary);
+}
+
+.kanban-board {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.75rem;
+  align-items: start;
+}
+
+.kanban-column {
+  position: relative;
+  overflow: visible;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem 0.75rem 0.75rem;
+  min-height: 8rem;
+}
+
+.kanban-column::before {
+  content: "";
+  position: absolute;
+  top: -1px;
+  left: 0.75rem;
+  width: 2rem;
+  height: 0.35rem;
+  border-radius: 0 0 2px 2px;
+  background: var(--status-awaitingvisitation);
+}
+
+.kanban-column[data-status="VisitScheduled"]::before {
+  background: var(--status-visitscheduled);
+}
+
+.kanban-column[data-status="Visited"]::before {
+  background: var(--status-visited);
+}
+
+.kanban-column[data-status="AwaitingResponse"]::before {
+  background: var(--status-awaitingresponse);
+}
+
+.kanban-column[data-status="Confirmed"]::before {
+  background: var(--status-confirmed);
+}
+
+.kanban-column[data-status="Cancelled"]::before {
+  background: var(--status-cancelled);
+}
+
+.kanban-column h2 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-family: var(--font-mono);
+  font-size: 0.8em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-muted);
+}
+
+.column-count {
+  color: var(--color-muted);
+  font-weight: normal;
+  font-size: 0.85em;
+  background: var(--color-bg-raised);
+  border-radius: 999px;
+  padding: 0.1em 0.6em;
+}
+
+.kanban-column-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.empty-column {
+  color: var(--color-muted);
+  font-size: 0.9em;
+  font-style: italic;
+}
+
+.apartment-card {
+  position: relative;
+  overflow: visible;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.85rem 0.75rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.apartment-card::before {
+  content: "";
+  position: absolute;
+  top: -0.4rem;
+  left: 0.75rem;
+  width: 2.75rem;
+  height: 1.1rem;
+  background: var(--color-card-tape);
+  border-radius: var(--radius-sm);
+  transform: rotate(-3deg);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  pointer-events: none;
+}
+
+.apartment-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 0.5rem;
+}
+
+.apartment-card-address {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1.05em;
+  color: var(--color-text-strong);
+  text-decoration: none;
+}
+
+.apartment-card-address:hover {
+  text-decoration: underline;
+}
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 1.5em;
+  padding: 0.1em 0.4em;
+  border-radius: 999px;
+  font-size: 0.8em;
+  font-weight: 600;
+  font-family: var(--font-mono);
+}
+
+.badge-unresolved {
+  background: var(--color-danger);
+  color: var(--color-danger-text);
+}
+
+.apartment-card-rent,
+.apartment-card-entry {
+  font-size: 0.9em;
+  color: var(--color-muted);
+}
+
+.apartment-card-visit {
+  font-size: 0.9em;
+  color: var(--color-text);
+  background: var(--color-info-bg);
+  border-left: 2px solid var(--color-info);
+  border-radius: var(--radius-sm);
+  padding: 0.4em 0.6em;
+}
+
+.apartment-card-status {
+  margin-top: 0.25rem;
+}
+
+.fab {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  width: 3.5rem;
+  height: 3.5rem;
+  border-radius: 50%;
+  border: none;
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  font-size: 1.75rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+}
+
+@media (max-width: 768px) {
+  .kanban-tabs {
+    display: flex;
+  }
+
+  .kanban-board {
+    display: block;
+  }
+
+  .kanban-column {
+    display: none;
+  }
+
+  .kanban-column[data-active="true"] {
+    display: block;
+  }
+}
+
+/* Forms */
+
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin-bottom: 0.75rem;
+}
+
+.form-field label {
+  font-size: 0.8em;
+  font-weight: 600;
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--color-muted);
+}
+
+.form-field input,
+.form-field select,
+.form-field textarea {
+  width: 100%;
+  padding: 0.5em;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border-strong);
+  font: inherit;
+  background: var(--color-bg-raised);
+  color: var(--color-text);
+}
+
+.form-field input:focus,
+.form-field select:focus,
+.form-field textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.field-error {
+  color: var(--color-danger);
+  font-size: 0.85em;
+}
+
+/* Modal */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1rem;
+  z-index: 100;
+}
+
+.modal {
+  background: var(--color-bg-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  width: 100%;
+  max-width: 32rem;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.modal-close {
+  width: 1.75rem;
+  height: 1.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+  color: var(--color-muted);
+}
+
+.modal-close:hover {
+  color: var(--color-text);
+  border-color: var(--color-text-strong);
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1rem;
+}
+
+/* Case file */
+
+.case-file {
+  padding: 1rem;
+  max-width: 40rem;
+  margin: 0 auto;
+}
+
+.back-link {
+  display: inline-block;
+  margin-bottom: 1rem;
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+}
+
+.case-file-header {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.case-file-header h1 {
+  font-size: 1.4em;
+}
+
+.case-file-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  margin: 0.75rem 0;
+  color: var(--color-muted);
+}
+
+.case-file-visit {
+  background: var(--color-info-bg);
+  border-left: 2px solid var(--color-info);
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.case-file-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.case-file-notes {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+}
+
+.case-file-notes textarea {
+  width: 100%;
+  padding: 0.5em;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-bg-raised);
+  color: var(--color-text);
+  font: inherit;
+  margin-bottom: 0.5rem;
+}
+
+.case-file-notes textarea:focus {
+  outline: none;
+  border-color: var(--color-primary);
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 0.2em 0.6em;
+  border-radius: 999px;
+  border: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.status-AwaitingVisitation {
+  background: color-mix(in srgb, var(--status-awaitingvisitation) 25%, transparent);
+  border-color: var(--status-awaitingvisitation);
+  color: var(--status-awaitingvisitation);
+}
+
+.status-VisitScheduled {
+  background: color-mix(in srgb, var(--status-visitscheduled) 25%, transparent);
+  border-color: var(--status-visitscheduled);
+  color: var(--status-visitscheduled);
+}
+
+.status-Visited {
+  background: color-mix(in srgb, var(--status-visited) 25%, transparent);
+  border-color: var(--status-visited);
+  color: var(--status-visited);
+}
+
+.status-AwaitingResponse {
+  background: color-mix(in srgb, var(--status-awaitingresponse) 25%, transparent);
+  border-color: var(--status-awaitingresponse);
+  color: var(--status-awaitingresponse);
+}
+
+.status-Confirmed {
+  background: color-mix(in srgb, var(--status-confirmed) 25%, transparent);
+  border-color: var(--status-confirmed);
+  color: var(--status-confirmed);
+}
+
+.status-Cancelled {
+  background: color-mix(in srgb, var(--status-cancelled) 25%, transparent);
+  border-color: var(--status-cancelled);
+  color: var(--status-cancelled);
+}
