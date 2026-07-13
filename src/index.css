@@ -1374,6 +1374,19 @@ button {
   cursor: crosshair;
 }
 
+.sketch-canvas-eraser {
+  cursor: none;
+}
+
+.sketch-eraser-preview {
+  position: absolute;
+  border: 1.5px solid var(--color-text);
+  border-radius: 50%;
+  background: rgba(128, 128, 128, 0.15);
+  pointer-events: none;
+  transform: translate(-50%, -50%);
+}
+
 /* Unresolved actions panel (dashboard) */
 
 .unresolved-panel {

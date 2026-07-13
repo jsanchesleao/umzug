@@ -64,6 +64,15 @@ function OptionsModal({ onClose }: OptionsModalProps) {
         </select>
       </div>
 
+      <label className="form-checkbox">
+        <input
+          type="checkbox"
+          checked={settings.sketchIgnoreTouch}
+          onChange={(e) => updateSettings({ sketchIgnoreTouch: e.target.checked })}
+        />
+        Ignore touch input while sketching (palm rejection)
+      </label>
+
       <div className="modal-actions">
         <button type="button" className="btn btn-primary" onClick={onClose}>
           Done

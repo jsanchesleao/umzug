@@ -122,10 +122,12 @@ export interface AppSettings {
   theme: ThemeMode;
   currency: CurrencyCode;
   dateFormat: DateFormatOption;
+  sketchIgnoreTouch: boolean;
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
   theme: "system",
   currency: "EUR",
   dateFormat: "DMY",
+  sketchIgnoreTouch: false,
 };

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal";
 import ConfirmDialog from "./ConfirmDialog";
 import { listSketchPagesForApartment, saveSketchSession, type SketchPageCommit } from "../data/sketchPages";
+import { useSettings } from "../settings/useSettings";
 
 interface SketchEditorModalProps {
   apartmentId: string;
@@ -22,7 +23,8 @@ type Tool = "pen" | "eraser";
 
 const UNDO_LIMIT = 20;
 const MIN_STROKE_WIDTH = 1.5;
-const MAX_STROKE_WIDTH = 8;
+const MAX_STROKE_WIDTH = 4;
+const ERASER_RADIUS = 14;
 
 function makeBlankPage(width: number, height: number): EditorPage {
   const content = document.createElement("canvas");
@@ -37,6 +39,7 @@ function strokeWidthFromPressure(pressure: number, scale: number): number {
 }
 
 function SketchEditorModal({ apartmentId, initialPageId, onClose }: SketchEditorModalProps) {
+  const { settings } = useSettings();
   const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef<{ x: number; y: number } | null>(null);
@@ -48,6 +51,18 @@ function SketchEditorModal({ apartmentId, initialPageId, onClose }: SketchEditor
   const [tool, setTool] = useState<Tool>("pen");
   const [saving, setSaving] = useState(false);
   const [confirmingDiscard, setConfirmingDiscard] = useState(false);
+  const [eraserPreview, setEraserPreview] = useState<{ x: number; y: number } | null>(null);
+
+  function isIgnoredPointer(e: React.PointerEvent<HTMLCanvasElement>) {
+    return settings.sketchIgnoreTouch && e.pointerType === "touch";
+  }
+
+  function updateEraserPreview(e: React.PointerEvent<HTMLCanvasElement>) {
+    const wrap = wrapRef.current;
+    if (!wrap) return;
+    const rect = wrap.getBoundingClientRect();
+    setEraserPreview({ x: e.clientX - rect.left, y: e.clientY - rect.top });
+  }
 
   // Load existing pages once on mount, sizing every offscreen page canvas
   // (and the live editing canvas) to the wrapper's on-screen size at open
@@ -142,7 +157,7 @@ function SketchEditorModal({ apartmentId, initialPageId, onClose }: SketchEditor
   ) {
     ctx.globalCompositeOperation = tool === "eraser" ? "destination-out" : "source-over";
     ctx.strokeStyle = "#000";
-    ctx.lineWidth = strokeWidthFromPressure(pressure, scale);
+    ctx.lineWidth = tool === "eraser" ? ERASER_RADIUS * 2 * scale : strokeWidthFromPressure(pressure, scale);
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
     ctx.beginPath();
@@ -152,6 +167,7 @@ function SketchEditorModal({ apartmentId, initialPageId, onClose }: SketchEditor
   }
 
   function handlePointerDown(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (isIgnoredPointer(e)) return;
     const page = pages?.[currentIndex];
     const canvas = canvasRef.current;
     if (!page || !canvas) return;
@@ -171,6 +187,8 @@ function SketchEditorModal({ apartmentId, initialPageId, onClose }: SketchEditor
   }
 
   function handlePointerMove(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (isIgnoredPointer(e)) return;
+    if (tool === "eraser") updateEraserPreview(e);
     if (!drawingRef.current) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -180,10 +198,21 @@ function SketchEditorModal({ apartmentId, initialPageId, onClose }: SketchEditor
     drawingRef.current = { x, y };
   }
 
+  function handlePointerEnter(e: React.PointerEvent<HTMLCanvasElement>) {
+    if (isIgnoredPointer(e)) return;
+    if (tool === "eraser") updateEraserPreview(e);
+  }
+
+  function handlePointerLeave() {
+    setEraserPreview(null);
+  }
+
   function handlePointerUp(e: React.PointerEvent<HTMLCanvasElement>) {
+    const wasDrawing = drawingRef.current !== null;
     const canvas = canvasRef.current;
     if (canvas?.hasPointerCapture(e.pointerId)) canvas.releasePointerCapture(e.pointerId);
     drawingRef.current = null;
+    if (!wasDrawing) return;
 
     const page = pages?.[currentIndex];
     if (!page || !canvas) return;
@@ -343,12 +372,25 @@ function SketchEditorModal({ apartmentId, initialPageId, onClose }: SketchEditor
       <div ref={wrapRef} className="sketch-canvas-wrap">
         <canvas
           ref={canvasRef}
-          className="sketch-canvas sketch-ink"
+          className={`sketch-canvas sketch-ink${tool === "eraser" ? " sketch-canvas-eraser" : ""}`}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
           onPointerUp={handlePointerUp}
           onPointerCancel={handlePointerUp}
+          onPointerEnter={handlePointerEnter}
+          onPointerLeave={handlePointerLeave}
         />
+        {tool === "eraser" && eraserPreview && (
+          <div
+            className="sketch-eraser-preview"
+            style={{
+              left: eraserPreview.x,
+              top: eraserPreview.y,
+              width: ERASER_RADIUS * 2,
+              height: ERASER_RADIUS * 2,
+            }}
+          />
+        )}
       </div>
 
       <div className="modal-actions">
