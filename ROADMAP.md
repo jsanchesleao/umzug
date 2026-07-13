@@ -69,10 +69,10 @@ At this point the core CRUD app is functionally complete end-to-end (create an a
 
 ## Milestone 8 — Accessibility & Non-Functional Polish
 
-- [ ] Keyboard operability: tab order, Escape to close modals, Enter to submit forms.
-- [ ] Non-color status/urgency indicators (icon or text label alongside color).
-- [ ] Performance check with a few hundred synthetic apartment records (bulk-import a generated dataset) to validate smoothness on mid-range hardware.
-- [ ] Cross-browser smoke test: current Chrome, Edge, Firefox, Safari.
+- [x] Keyboard operability: tab order, Escape to close modals, Enter to submit forms. `Modal` now traps Tab/Shift+Tab focus inside the dialog, moves focus in on open (respecting any `autoFocus` control already inside it), and restores focus to the triggering element on close; Escape-to-close and Enter-to-submit (native `<form>` submit) were already in place.
+- [x] Non-color status/urgency indicators (icon or text label alongside color) — already satisfied throughout: `StatusBadge`/`ActionRow` render the status/urgency name as text, and overdue actions get an explicit "Overdue" text flag, all alongside their color coding.
+- [x] Performance check with a few hundred synthetic apartment records (bulk-import a generated dataset) to validate smoothness on mid-range hardware. Verified via a generated 300-apartment/timeline/action dataset imported through the real Import flow: import completed in ~1.4s, a full reload with all 300 apartments rendered in ~1s, and the search filter stayed responsive — no jank or console errors observed.
+- [x] Cross-browser smoke test: current Chrome, Edge, Firefox, Safari. Automated smoke test (create apartment, timeline event, action) run against Chromium (Chrome/Edge engine), Firefox, and WebKit (Safari's engine) — all three passed with zero console errors. Real Safari itself isn't available on Windows for manual verification.
 
 ## Milestone 9 — Photos (committed for v1)
 

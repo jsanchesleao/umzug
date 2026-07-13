@@ -347,7 +347,13 @@ button {
   gap: 0.5rem;
 }
 
-.apartment-card-address {
+.apartment-card-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.apartment-card-title {
   font-family: var(--font-serif);
   font-weight: 700;
   font-size: 1.05em;
@@ -355,8 +361,13 @@ button {
   text-decoration: none;
 }
 
-.apartment-card-address:hover {
+.apartment-card-title:hover {
   text-decoration: underline;
+}
+
+.apartment-card-address {
+  font-size: 0.8em;
+  color: var(--color-muted);
 }
 
 .badge {

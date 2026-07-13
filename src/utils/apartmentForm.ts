@@ -3,6 +3,7 @@ import type { ApartmentInput } from "../data/apartments";
 import { todayISODate } from "./date";
 
 export interface ApartmentFormValues {
+  title: string;
   address: string;
   coldRent: string;
   warmRent: string;
@@ -18,6 +19,7 @@ export type ApartmentFormErrors = Partial<Record<keyof ApartmentFormValues, stri
 
 export function emptyApartmentFormValues(): ApartmentFormValues {
   return {
+    title: "",
     address: "",
     coldRent: "",
     warmRent: "",
@@ -32,6 +34,7 @@ export function emptyApartmentFormValues(): ApartmentFormValues {
 
 export function apartmentToFormValues(apartment: Apartment): ApartmentFormValues {
   return {
+    title: apartment.title,
     address: apartment.address,
     coldRent: apartment.coldRent != null ? String(apartment.coldRent) : "",
     warmRent: apartment.warmRent != null ? String(apartment.warmRent) : "",
@@ -56,7 +59,7 @@ function isValidUrl(value: string): boolean {
 export function validateApartmentForm(values: ApartmentFormValues): ApartmentFormErrors {
   const errors: ApartmentFormErrors = {};
 
-  if (!values.address.trim()) errors.address = "Address is required.";
+  if (!values.title.trim()) errors.title = "Title is required.";
 
   if (values.coldRent.trim()) {
     const coldRent = Number(values.coldRent);
@@ -72,9 +75,7 @@ export function validateApartmentForm(values: ApartmentFormValues): ApartmentFor
     }
   }
 
-  if (!values.originalLink.trim()) {
-    errors.originalLink = "Link is required.";
-  } else if (!isValidUrl(values.originalLink.trim())) {
+  if (values.originalLink.trim() && !isValidUrl(values.originalLink.trim())) {
     errors.originalLink = "Enter a valid URL.";
   }
 
@@ -94,6 +95,7 @@ export function validateApartmentForm(values: ApartmentFormValues): ApartmentFor
 
 export function apartmentFormValuesToInput(values: ApartmentFormValues): ApartmentInput {
   return {
+    title: values.title.trim(),
     address: values.address.trim(),
     coldRent: values.coldRent.trim() ? Number(values.coldRent) : null,
     warmRent: values.warmRent.trim() ? Number(values.warmRent) : null,

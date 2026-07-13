@@ -6,13 +6,13 @@ import { useSettings } from "../settings/useSettings";
 
 interface ActionRowProps {
   action: Action;
-  apartmentAddress?: string;
+  apartmentTitle?: string;
   onStatusChange: (status: ActionStatus) => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-function ActionRow({ action, apartmentAddress, onStatusChange, onEdit, onDelete }: ActionRowProps) {
+function ActionRow({ action, apartmentTitle, onStatusChange, onEdit, onDelete }: ActionRowProps) {
   const { settings } = useSettings();
   const overdue = action.status === "Unresolved" && isOverdue(action.dueDate);
 
@@ -26,9 +26,9 @@ function ActionRow({ action, apartmentAddress, onStatusChange, onEdit, onDelete 
       </div>
 
       <div className="action-row-meta">
-        {apartmentAddress && (
+        {apartmentTitle && (
           <Link to={`/apartments/${action.apartmentId}`} className="action-row-apartment">
-            {apartmentAddress}
+            {apartmentTitle}
           </Link>
         )}
         <span className={overdue ? "action-row-due overdue" : "action-row-due"}>

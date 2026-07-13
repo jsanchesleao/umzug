@@ -69,7 +69,7 @@ function ApartmentDetail() {
 
   async function handleExport() {
     const exported = await buildApartmentExport(apartment!.id, includePhotosInExport);
-    const slug = apartment!.address.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "apartment";
+    const slug = apartment!.title.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "apartment";
     downloadJson(`umzug-${slug}.json`, exported);
   }
 
@@ -82,17 +82,20 @@ function ApartmentDetail() {
       <div className="case-file-grid">
         <div className="case-file-col-left">
           <header className="case-file-header">
-            <h1>{apartment.address}</h1>
+            <h1>{apartment.title}</h1>
             <StatusBadge status={apartment.status} />
 
             <div className="case-file-meta">
+              {apartment.address && <div>Address: {apartment.address}</div>}
               <div>Cold rent: {formatRent(apartment.coldRent, settings.currency)}</div>
               <div>Warm rent: {formatRent(apartment.warmRent, settings.currency)}</div>
-              <div>
-                <a href={apartment.originalLink} target="_blank" rel="noopener noreferrer">
-                  Original listing
-                </a>
-              </div>
+              {apartment.originalLink && (
+                <div>
+                  <a href={apartment.originalLink} target="_blank" rel="noopener noreferrer">
+                    Original listing
+                  </a>
+                </div>
+              )}
               <div>Entry date: {formatDate(apartment.entryDate, settings.dateFormat)}</div>
             </div>
 
@@ -173,7 +176,7 @@ function ApartmentDetail() {
       {confirmingDelete && (
         <ConfirmDialog
           title="Delete apartment"
-          message={`Delete ${apartment.address}? This will also delete its timeline events, actions, and photos. This cannot be undone.`}
+          message={`Delete ${apartment.title}? This will also delete its timeline events, actions, and photos. This cannot be undone.`}
           confirmLabel="Delete"
           danger
           onConfirm={handleDelete}

@@ -33,6 +33,22 @@ class UmzugDB extends Dexie {
             delete apartment.rentCost;
           });
       });
+
+    this.version(3)
+      .stores({
+        apartments: "id, status, entryDate",
+        timelineEvents: "id, apartmentId, date",
+        actions: "id, apartmentId, eventId, status, dueDate",
+        photos: "id, apartmentId",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("apartments")
+          .toCollection()
+          .modify((apartment: Record<string, unknown>) => {
+            apartment.title = apartment.address ?? "";
+          });
+      });
   }
 }
 

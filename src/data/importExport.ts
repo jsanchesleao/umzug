@@ -37,6 +37,7 @@ export interface ExportedPhoto {
 
 export interface ExportedApartment {
   id: string;
+  title: string;
   address: string;
   coldRent: number | null;
   warmRent: number | null;
@@ -110,6 +111,7 @@ export async function buildApartmentExport(
 
   return {
     id: apartment.id,
+    title: apartment.title,
     address: apartment.address,
     coldRent: apartment.coldRent,
     warmRent: apartment.warmRent,
@@ -186,6 +188,7 @@ function isExportedApartment(value: unknown): value is ExportedApartment {
   if (!isRecord(value)) return false;
   return (
     typeof value.id === "string" &&
+    typeof value.title === "string" &&
     typeof value.address === "string" &&
     (value.coldRent === null || typeof value.coldRent === "number") &&
     (value.warmRent === null || typeof value.warmRent === "number") &&
@@ -225,6 +228,18 @@ function normalizeLegacyRent(value: unknown): unknown {
 }
 
 /**
+ * Older export files predate the `title` field. Fall back to `address` (the
+ * old primary label) so those files still import cleanly.
+ */
+function normalizeLegacyTitle(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  if (typeof value.title !== "string") {
+    return { ...value, title: typeof value.address === "string" ? value.address : "" };
+  }
+  return value;
+}
+
+/**
  * Parses raw import-file text into a list of apartments, detecting whether the
  * file holds a single apartment (object) or a bulk export (array). Throws on
  * malformed JSON or a shape that doesn't match the export schema — callers
@@ -241,7 +256,7 @@ export function parseImportPayload(text: string): ExportedApartment[] {
   const candidates = Array.isArray(parsed) ? parsed : [parsed];
   if (candidates.length === 0) return [];
 
-  const normalized = candidates.map(normalizeLegacyRent);
+  const normalized = candidates.map(normalizeLegacyRent).map(normalizeLegacyTitle);
 
   if (!normalized.every(isExportedApartment)) {
     throw new Error("File does not match the expected apartment export shape.");
@@ -317,6 +332,7 @@ export async function importApartments(
 
         await db.apartments.add({
           id: apartmentId,
+          title: exported.title,
           address: exported.address,
           coldRent: exported.coldRent,
           warmRent: exported.warmRent,

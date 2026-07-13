@@ -41,10 +41,11 @@ type ActionStatus = "Unresolved" | "Resolved" | "Cancelled";
 | Field | Type | Notes |
 |---|---|---|
 | `id` | string (UUID) | |
-| `address` | string | required |
+| `title` | string | required; primary label for the case file (Kanban card, case-file header) |
+| `address` | string | optional |
 | `coldRent` | number \| null | optional; base rent excluding extra costs; currency not modeled, see §8 |
 | `warmRent` | number \| null | optional; rent including heating/water/other costs; currency not modeled, see §8 |
-| `originalLink` | string (URL) | required |
+| `originalLink` | string (URL) | optional; must be a syntactically valid URL if provided |
 | `entryDate` | ISO date | required; defaults to today on creation |
 | `status` | `ApartmentStatus` | required; defaults to `AwaitingVisitation` |
 | `visitDate` | ISO datetime \| null | required when `status === "VisitScheduled"` |
@@ -96,12 +97,12 @@ Two stacked sections plus a floating action button.
 **A. Unresolved Actions panel**
 - Collapsible list, all `Action` records with `status === "Unresolved"` across all apartments.
 - Sort: `urgency` descending (Critical → Low) as primary key, `dueDate` ascending as secondary key.
-- Each row shows: description, parent apartment address (linking to its case file), due date, urgency badge. Overdue items (`dueDate < today`) are visually flagged (e.g. red text/icon) independent of sort position.
+- Each row shows: description, parent apartment title (linking to its case file), due date, urgency badge. Overdue items (`dueDate < today`) are visually flagged (e.g. red text/icon) independent of sort position.
 - Collapsed/expanded state persists across navigation within a session (not required to persist across reloads).
 
 **B. Kanban board**
-- One column per `ApartmentStatus` (6 columns), cards = apartment summary (address, rent, entry date, status-specific detail — see below, and a badge if it has unresolved actions).
-- Desktop (≥ some breakpoint, e.g. 768px): all 6 columns visible side by side, plus filter controls: free-text search (matches address/notes) and a toggle to show only apartments with overdue/unresolved actions.
+- One column per `ApartmentStatus` (6 columns), cards = apartment summary (title, address in smaller type if present, rent, entry date, status-specific detail — see below, and a badge if it has unresolved actions).
+- Desktop (≥ some breakpoint, e.g. 768px): all 6 columns visible side by side, plus filter controls: free-text search (matches title/address/notes) and a toggle to show only apartments with overdue/unresolved actions.
 - Mobile: only one column visible at a time; a tab bar or dropdown selects which status/column is shown. Same filter controls available, collapsed into the mobile layout (e.g. behind a filter icon).
 - Cards for `VisitScheduled` apartments additionally show `visitDate` and `visitAddress`.
 - Moving a card between columns (drag-and-drop on desktop; explicit status-change control on mobile, since drag-and-drop is unreliable on touch) updates `status` and, when moving into/out of `VisitScheduled`, prompts for/clears `visitDate`/`visitAddress` as needed.
@@ -118,7 +119,7 @@ Two stacked sections plus a floating action button.
 
 ### 4.2 Apartment Case File (`/apartments/:id`)
 
-- Header: address, status badge, rent, clickable original link (opens in new tab), entry date.
+- Header: title, address (if present), status badge, rent, clickable original link (if present, opens in new tab), entry date.
 - If `status === "VisitScheduled"`: a visible block with visit date and visit address.
 - Unresolved-actions summary: all `Action`s where `apartmentId` matches this apartment (whether attached to the apartment directly or to one of its events) and `status === "Unresolved"`, same sort rule as §4.1A.
 - Timeline: chronological (oldest first or newest first — dev team's choice, but must be consistently ordered and labeled) list of events; each event displays date, short description, and — if present — an expandable long description, plus any actions attached to it.
@@ -135,8 +136,8 @@ Two stacked sections plus a floating action button.
 ### 4.3 Add / Edit Apartment (modal)
 
 - Single modal form (opened from FAB for "add", or from an edit control for "edit"), styled as a quick-create form (reference point: Jira's "create issue" modal — compact, doesn't navigate away from the current view).
-- Fields: address*, coldRent, warmRent, originalLink*, entryDate* (defaults to today), status* (defaults to `AwaitingVisitation`), visitDate/visitAddress (shown conditionally when status is `VisitScheduled`), notes.
-- Client-side validation: required fields enforced; `coldRent`/`warmRent` are optional but, if provided, must be non-negative numbers (either or both may be left blank, displayed as "Unknown" elsewhere in the UI); `originalLink` must be a syntactically valid URL; `visitDate`/`visitAddress` required if and only if status is `VisitScheduled`.
+- Fields: title*, address, coldRent, warmRent, originalLink, entryDate* (defaults to today), status* (defaults to `AwaitingVisitation`), visitDate/visitAddress (shown conditionally when status is `VisitScheduled`), notes.
+- Client-side validation: `title` is the only always-required identifying field; `address` and `originalLink` are optional; `coldRent`/`warmRent` are optional but, if provided, must be non-negative numbers (either or both may be left blank, displayed as "Unknown" elsewhere in the UI); `originalLink`, if provided, must be a syntactically valid URL; `visitDate`/`visitAddress` required if and only if status is `VisitScheduled`.
 - On submit, apartment is created/updated in IndexedDB and the modal closes; dashboard/case file reflects the change immediately (no reload).
 
 **Acceptance criteria**
@@ -171,7 +172,7 @@ Two stacked sections plus a floating action button.
 - **Export JSON schema** (nested/denormalized, independent of the internal normalized DB tables):
 ```json
 {
-  "id": "…", "address": "…", "coldRent": 0, "warmRent": null, "originalLink": "…",
+  "id": "…", "title": "…", "address": "…", "coldRent": 0, "warmRent": null, "originalLink": "…",
   "entryDate": "…", "status": "…", "visitDate": null, "visitAddress": null,
   "notes": "…", "createdAt": "…", "updatedAt": "…",
   "timeline": [

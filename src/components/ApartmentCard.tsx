@@ -29,9 +29,14 @@ function ApartmentCard({ apartment, onStatusChange }: ApartmentCardProps) {
       }}
     >
       <div className="apartment-card-header">
-        <Link to={`/apartments/${apartment.id}`} className="apartment-card-address">
-          {apartment.address}
-        </Link>
+        <div className="apartment-card-title-group">
+          <Link to={`/apartments/${apartment.id}`} className="apartment-card-title">
+            {apartment.title}
+          </Link>
+          {apartment.address && (
+            <div className="apartment-card-address">{apartment.address}</div>
+          )}
+        </div>
         <details className="status-menu">
           <summary className="status-menu-trigger" aria-label="Move to another status">
             ⇄

@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import type { ReactNode } from "react";
 
 interface ModalProps {
@@ -7,10 +7,53 @@ interface ModalProps {
   children: ReactNode;
 }
 
+const FOCUSABLE_SELECTOR =
+  'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
+
 function Modal({ title, onClose, children }: ModalProps) {
+  const modalRef = useRef<HTMLDivElement>(null);
+
+  // Move focus into the dialog on open (unless a control inside it already
+  // grabbed focus via autoFocus) and hand it back to whatever triggered the
+  // modal once it closes, so keyboard users aren't dropped back at the top
+  // of the page.
+  useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null;
+    const modalEl = modalRef.current;
+    if (modalEl && !modalEl.contains(document.activeElement)) {
+      const first = modalEl.querySelector<HTMLElement>(FOCUSABLE_SELECTOR);
+      (first ?? modalEl).focus();
+    }
+    return () => {
+      previouslyFocused?.focus();
+    };
+  }, []);
+
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
+      if (event.key === "Escape") {
+        onClose();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const modalEl = modalRef.current;
+      if (!modalEl) return;
+      const focusable = Array.from(modalEl.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR));
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+
+      // Trap Tab/Shift+Tab inside the modal so keyboard focus can't wander
+      // into content hidden behind the overlay.
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
@@ -23,6 +66,8 @@ function Modal({ title, onClose, children }: ModalProps) {
         role="dialog"
         aria-modal="true"
         aria-label={title}
+        tabIndex={-1}
+        ref={modalRef}
         onClick={(event) => event.stopPropagation()}
       >
         <div className="modal-header">

@@ -29,6 +29,7 @@ function Dashboard() {
       if (onlyUnresolved && !unresolvedApartmentIds.has(apartment.id)) return false;
       if (query) {
         const matches =
+          apartment.title.toLowerCase().includes(query) ||
           apartment.address.toLowerCase().includes(query) ||
           apartment.notes.toLowerCase().includes(query);
         if (!matches) return false;

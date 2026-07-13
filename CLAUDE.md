@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Umzug is a client-only Progressive Web App for tracking apartments during a rental search (a "case file" per apartment: status, timeline of events, and follow-up actions). No backend, no auth, no analytics — all data lives on-device in IndexedDB, with JSON import/export as the only transfer mechanism. Deployed as a static site to GitHub Pages.
 
-Full product/data-model spec: `SPEC.md`. Milestone tracker (what's shipped vs. outstanding): `ROADMAP.md` — currently only Milestone 8 (accessibility/non-functional polish) is incomplete; everything else is done.
+Full product/data-model spec: `SPEC.md`. Milestone tracker (what's shipped vs. outstanding): `ROADMAP.md` — all milestones (0–9) are complete; check it before assuming a feature is unbuilt.
 
 ## Commands
 
@@ -40,3 +40,5 @@ The Dexie schema is versioned in `db.ts` (`version(1)`, then `version(2)` with a
 **UI structure.** `src/pages/` holds the two route-level components; `src/components/` holds the Kanban board, per-entity modals/forms (apartment, timeline event, action, photo), and shared UI (Modal, ConfirmDialog, StatusBadge); `src/utils/` holds form-state/validation helpers per entity plus `date.ts`/`rent.ts`/`image.ts`. All entity types and enums (`ApartmentStatus`, `ActionUrgency`, `ActionStatus`, plus their label maps and list constants) live in `src/types.ts`.
 
 **PWA.** `vite-plugin-pwa` is configured in `vite.config.ts` (manifest + Workbox precaching of the app shell) so the app is fully usable offline after first load.
+
+**Settings.** App-wide settings (currently theme: light/dark/system) live outside Dexie, in `localStorage` under the `umzug:settings` key (`src/settings/SettingsContext.tsx`), separate from the four IndexedDB stores since they're device preferences rather than case-file data. `useSettings()` (`src/settings/useSettings.ts`) exposes `{ settings, updateSettings }` from context; the provider also resolves `"system"` against `matchMedia` and writes the resolved theme to `document.documentElement.dataset.theme` plus the `theme-color` meta tag.

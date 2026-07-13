@@ -47,7 +47,18 @@ function ApartmentForm({ initialValues, submitLabel, onSubmit, onCancel }: Apart
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div className="form-field">
-        <label htmlFor="address">Address *</label>
+        <label htmlFor="title">Title *</label>
+        <input
+          id="title"
+          type="text"
+          value={values.title}
+          onChange={(e) => update("title", e.target.value)}
+        />
+        {errors.title && <span className="field-error">{errors.title}</span>}
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="address">Address</label>
         <input
           id="address"
           type="text"
@@ -84,7 +95,7 @@ function ApartmentForm({ initialValues, submitLabel, onSubmit, onCancel }: Apart
       </div>
 
       <div className="form-field">
-        <label htmlFor="originalLink">Listing link *</label>
+        <label htmlFor="originalLink">Listing link</label>
         <input
           id="originalLink"
           type="text"

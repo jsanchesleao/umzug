@@ -19,7 +19,7 @@ function UnresolvedActionsPanel({ actions, apartments }: UnresolvedActionsPanelP
     sessionStorage.setItem(COLLAPSE_STORAGE_KEY, collapsed ? "1" : "0");
   }, [collapsed]);
 
-  const addressById = useMemo(() => new Map(apartments.map((a) => [a.id, a.address])), [apartments]);
+  const titleById = useMemo(() => new Map(apartments.map((a) => [a.id, a.title])), [apartments]);
 
   async function handleStatusChange(actionId: string, status: ActionStatus) {
     await updateAction(actionId, { status });
@@ -44,7 +44,7 @@ function UnresolvedActionsPanel({ actions, apartments }: UnresolvedActionsPanelP
             <ActionRow
               key={action.id}
               action={action}
-              apartmentAddress={addressById.get(action.apartmentId)}
+              apartmentTitle={titleById.get(action.apartmentId)}
               onStatusChange={(status) => handleStatusChange(action.id, status)}
             />
           ))}
