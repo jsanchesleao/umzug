@@ -4,19 +4,16 @@ import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { Apartment, ApartmentStatus } from "../types";
 import { countUnresolvedActionsForApartment } from "../data/actions";
 import { formatRent } from "../utils/rent";
+import { formatDate, formatDateTime } from "../utils/date";
+import { useSettings } from "../settings/useSettings";
 
 interface ApartmentCardProps {
   apartment: Apartment;
   onStatusChange: (apartment: Apartment, newStatus: ApartmentStatus) => void;
 }
 
-function formatDateTime(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return value;
-  return date.toLocaleString();
-}
-
 function ApartmentCard({ apartment, onStatusChange }: ApartmentCardProps) {
+  const { settings } = useSettings();
   const unresolvedCount = useLiveQuery(
     () => countUnresolvedActionsForApartment(apartment.id),
     [apartment.id],
@@ -55,14 +52,16 @@ function ApartmentCard({ apartment, onStatusChange }: ApartmentCardProps) {
       </div>
 
       <div className="apartment-card-rent">
-        <div>Cold rent: {formatRent(apartment.coldRent)}</div>
-        <div>Warm rent: {formatRent(apartment.warmRent)}</div>
+        <div>Cold rent: {formatRent(apartment.coldRent, settings.currency)}</div>
+        <div>Warm rent: {formatRent(apartment.warmRent, settings.currency)}</div>
       </div>
-      <div className="apartment-card-entry">Entry date: {apartment.entryDate}</div>
+      <div className="apartment-card-entry">
+        Entry date: {formatDate(apartment.entryDate, settings.dateFormat)}
+      </div>
 
       {apartment.status === "VisitScheduled" && apartment.visitDate && (
         <div className="apartment-card-visit">
-          <div>Visit: {formatDateTime(apartment.visitDate)}</div>
+          <div>Visit: {formatDateTime(apartment.visitDate, settings.dateFormat)}</div>
           <div>At: {apartment.visitAddress}</div>
         </div>
       )}

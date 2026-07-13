@@ -6,12 +6,15 @@ import { countActionsForEvent, deleteTimelineEventCascade } from "../data/timeli
 import ActionList from "./ActionList";
 import TimelineEventModal from "./TimelineEventModal";
 import ConfirmDialog from "./ConfirmDialog";
+import { formatDate } from "../utils/date";
+import { useSettings } from "../settings/useSettings";
 
 interface TimelineEventItemProps {
   event: TimelineEvent;
 }
 
 function TimelineEventItem({ event }: TimelineEventItemProps) {
+  const { settings } = useSettings();
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
 
@@ -29,7 +32,7 @@ function TimelineEventItem({ event }: TimelineEventItemProps) {
   return (
     <div className="timeline-event">
       <div className="timeline-event-header">
-        <span className="timeline-event-date">{event.date}</span>
+        <span className="timeline-event-date">{formatDate(event.date, settings.dateFormat)}</span>
         <span className="timeline-event-short">{event.shortDescription}</span>
         <div className="timeline-event-controls">
           <button type="button" className="btn btn-sm" onClick={() => setEditing(true)}>

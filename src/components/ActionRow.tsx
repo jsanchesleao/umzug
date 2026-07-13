@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { ACTION_STATUSES } from "../types";
 import type { Action, ActionStatus } from "../types";
-import { isOverdue } from "../utils/date";
+import { formatDate, isOverdue } from "../utils/date";
+import { useSettings } from "../settings/useSettings";
 
 interface ActionRowProps {
   action: Action;
@@ -12,6 +13,7 @@ interface ActionRowProps {
 }
 
 function ActionRow({ action, apartmentAddress, onStatusChange, onEdit, onDelete }: ActionRowProps) {
+  const { settings } = useSettings();
   const overdue = action.status === "Unresolved" && isOverdue(action.dueDate);
 
   return (
@@ -30,7 +32,7 @@ function ActionRow({ action, apartmentAddress, onStatusChange, onEdit, onDelete 
           </Link>
         )}
         <span className={overdue ? "action-row-due overdue" : "action-row-due"}>
-          Due {action.dueDate}
+          Due {formatDate(action.dueDate, settings.dateFormat)}
           {overdue && <span className="overdue-flag"> · Overdue</span>}
         </span>
       </div>

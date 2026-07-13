@@ -26,6 +26,23 @@
           window.history.replaceState(null, "", l.pathname.slice(0, -1) + decoded + l.hash);
         }
       })(window.location);
+
+      // Apply the saved theme before first paint to avoid a flash of the
+      // wrong theme; SettingsProvider re-applies (and keeps watching) this
+      // once React mounts.
+      (function () {
+        try {
+          var raw = localStorage.getItem("umzug:settings");
+          var mode = raw ? JSON.parse(raw).theme : "system";
+          var resolved =
+            mode === "light" || mode === "dark"
+              ? mode
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.dataset.theme = resolved;
+        } catch {}
+      })();
     </script>
   </head>
   <body>

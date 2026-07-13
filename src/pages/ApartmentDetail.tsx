@@ -12,10 +12,13 @@ import ActionList from "../components/ActionList";
 import TimelineSection from "../components/TimelineSection";
 import PhotoSection from "../components/PhotoSection";
 import { formatRent } from "../utils/rent";
+import { formatDate, formatDateTime } from "../utils/date";
+import { useSettings } from "../settings/useSettings";
 
 function ApartmentDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { settings } = useSettings();
   const apartment = useLiveQuery(() => (id ? getApartment(id) : undefined), [id]);
   const directActions = useLiveQuery(async () => {
     if (!id) return [];
@@ -83,19 +86,19 @@ function ApartmentDetail() {
             <StatusBadge status={apartment.status} />
 
             <div className="case-file-meta">
-              <div>Cold rent: {formatRent(apartment.coldRent)}</div>
-              <div>Warm rent: {formatRent(apartment.warmRent)}</div>
+              <div>Cold rent: {formatRent(apartment.coldRent, settings.currency)}</div>
+              <div>Warm rent: {formatRent(apartment.warmRent, settings.currency)}</div>
               <div>
                 <a href={apartment.originalLink} target="_blank" rel="noopener noreferrer">
                   Original listing
                 </a>
               </div>
-              <div>Entry date: {apartment.entryDate}</div>
+              <div>Entry date: {formatDate(apartment.entryDate, settings.dateFormat)}</div>
             </div>
 
             {apartment.status === "VisitScheduled" && apartment.visitDate && (
               <div className="case-file-visit">
-                <div>Visit date: {new Date(apartment.visitDate).toLocaleString()}</div>
+                <div>Visit date: {formatDateTime(apartment.visitDate, settings.dateFormat)}</div>
                 <div>Visit address: {apartment.visitAddress}</div>
               </div>
             )}

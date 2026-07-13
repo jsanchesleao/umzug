@@ -76,3 +76,46 @@ export interface Photo {
   caption: string | null;
   createdAt: string;
 }
+
+export type ThemeMode = "system" | "light" | "dark";
+
+export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
+
+export const THEME_MODE_LABELS: Record<ThemeMode, string> = {
+  system: "System",
+  light: "Light",
+  dark: "Dark",
+};
+
+export type CurrencyCode = "EUR" | "USD" | "GBP" | "CHF";
+
+export const CURRENCY_CODES: CurrencyCode[] = ["EUR", "USD", "GBP", "CHF"];
+
+export const CURRENCY_LABELS: Record<CurrencyCode, string> = {
+  EUR: "Euro (€)",
+  USD: "US Dollar ($)",
+  GBP: "British Pound (£)",
+  CHF: "Swiss Franc (CHF)",
+};
+
+export type DateFormatOption = "DMY" | "MDY" | "ISO";
+
+export const DATE_FORMAT_OPTIONS: DateFormatOption[] = ["DMY", "MDY", "ISO"];
+
+export const DATE_FORMAT_LABELS: Record<DateFormatOption, string> = {
+  DMY: "European (31/12/2026)",
+  MDY: "US (12/31/2026)",
+  ISO: "ISO (2026-12-31)",
+};
+
+export interface AppSettings {
+  theme: ThemeMode;
+  currency: CurrencyCode;
+  dateFormat: DateFormatOption;
+}
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  theme: "system",
+  currency: "EUR",
+  dateFormat: "DMY",
+};
