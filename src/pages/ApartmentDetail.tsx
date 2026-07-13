@@ -2,14 +2,23 @@ import { useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { deleteApartmentCascade, getApartment, updateApartment } from "../data/apartments";
+import { listActionsForApartment } from "../data/actions";
 import ApartmentModal from "../components/ApartmentModal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import StatusBadge from "../components/StatusBadge";
+import UnresolvedActionsSummary from "../components/UnresolvedActionsSummary";
+import ActionList from "../components/ActionList";
+import TimelineSection from "../components/TimelineSection";
 
 function ApartmentDetail() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const apartment = useLiveQuery(() => (id ? getApartment(id) : undefined), [id]);
+  const directActions = useLiveQuery(async () => {
+    if (!id) return [];
+    const all = await listActionsForApartment(id);
+    return all.filter((action) => action.eventId === null);
+  }, [id]);
 
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -91,6 +100,20 @@ function ApartmentDetail() {
           </button>
         </div>
       </header>
+
+      <UnresolvedActionsSummary apartmentId={apartment.id} />
+
+      <section className="case-file-actions-section">
+        <h2>Actions</h2>
+        <ActionList
+          apartmentId={apartment.id}
+          eventId={null}
+          actions={directActions ?? []}
+          emptyLabel="No actions on this apartment yet."
+        />
+      </section>
+
+      <TimelineSection apartmentId={apartment.id} />
 
       <section className="case-file-notes">
         <h2>Notes</h2>

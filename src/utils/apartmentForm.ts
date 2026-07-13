@@ -1,5 +1,6 @@
 import { APARTMENT_STATUSES, type Apartment, type ApartmentStatus } from "../types";
 import type { ApartmentInput } from "../data/apartments";
+import { todayISODate } from "./date";
 
 export interface ApartmentFormValues {
   address: string;
@@ -13,10 +14,6 @@ export interface ApartmentFormValues {
 }
 
 export type ApartmentFormErrors = Partial<Record<keyof ApartmentFormValues, string>>;
-
-export function todayISODate(): string {
-  return new Date().toISOString().slice(0, 10);
-}
 
 export function emptyApartmentFormValues(): ApartmentFormValues {
   return {

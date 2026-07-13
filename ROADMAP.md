@@ -40,18 +40,18 @@ Everything else depends on this being solid, since schema mistakes are expensive
 
 ## Milestone 4 — Timeline & Actions
 
-- [ ] Timeline event CRUD (§4.4): add/edit/delete, chronological ordering (pick and document oldest/newest-first per open question resolution).
-- [ ] Delete-event confirmation that names the count of actions that will cascade-delete.
-- [ ] Action CRUD (§4.5): create on apartment or on a specific event, edit fields, inline status-toggle control.
-- [ ] Unresolved-actions summary on the case file (§4.2), same sort rule as dashboard.
-- [ ] Unresolved Actions panel on the dashboard (§4.1A): collapsible, sorted, overdue flag, session-persisted collapse state.
+- [x] Timeline event CRUD (§4.4): add/edit/delete, chronological ordering (pick and document oldest/newest-first per open question resolution).
+- [x] Delete-event confirmation that names the count of actions that will cascade-delete.
+- [x] Action CRUD (§4.5): create on apartment or on a specific event, edit fields, inline status-toggle control.
+- [x] Unresolved-actions summary on the case file (§4.2), same sort rule as dashboard.
+- [x] Unresolved Actions panel on the dashboard (§4.1A): collapsible, sorted, overdue flag, session-persisted collapse state.
 
 At this point the core CRUD app is functionally complete end-to-end (create an apartment, move it through statuses, track events/actions) — good milestone for an internal dogfood pass.
 
 ## Milestone 5 — Drag-and-Drop & Filters
 
-- [ ] Desktop drag-and-drop between Kanban columns, with prompt for visit fields when entering/leaving `VisitScheduled`.
-- [ ] Dashboard filters: free-text search (address/notes) and overdue/unresolved toggle, in both desktop and mobile (behind filter icon) layouts.
+- [x] Desktop drag-and-drop between Kanban columns, with prompt for visit fields when entering/leaving `VisitScheduled`.
+- [x] Dashboard filters: free-text search (address/notes) and overdue/unresolved toggle, in both desktop and mobile (behind filter icon) layouts.
 
 ## Milestone 6 — Import / Export
 

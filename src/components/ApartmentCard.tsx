@@ -22,7 +22,14 @@ function ApartmentCard({ apartment, onStatusChange }: ApartmentCardProps) {
   );
 
   return (
-    <article className="apartment-card">
+    <article
+      className="apartment-card"
+      draggable
+      onDragStart={(e) => {
+        e.dataTransfer.setData("text/plain", apartment.id);
+        e.dataTransfer.effectAllowed = "move";
+      }}
+    >
       <div className="apartment-card-header">
         <Link to={`/apartments/${apartment.id}`} className="apartment-card-address">
           {apartment.address}

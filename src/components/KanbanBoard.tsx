@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { DragEvent } from "react";
 import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { Apartment, ApartmentStatus } from "../types";
 import ApartmentCard from "./ApartmentCard";
@@ -10,8 +11,17 @@ interface KanbanBoardProps {
 
 function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
   const [selectedStatus, setSelectedStatus] = useState<ApartmentStatus>("AwaitingVisitation");
+  const [dragOverStatus, setDragOverStatus] = useState<ApartmentStatus | null>(null);
 
   const byStatus = (status: ApartmentStatus) => apartments.filter((a) => a.status === status);
+
+  function handleDrop(event: DragEvent, status: ApartmentStatus) {
+    event.preventDefault();
+    setDragOverStatus(null);
+    const apartmentId = event.dataTransfer.getData("text/plain");
+    const apartment = apartments.find((a) => a.id === apartmentId);
+    if (apartment) onStatusChange(apartment, status);
+  }
 
   return (
     <div>
@@ -37,6 +47,13 @@ function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
               className="kanban-column"
               data-status={status}
               data-active={status === selectedStatus}
+              data-drag-over={dragOverStatus === status}
+              onDragOver={(e) => {
+                e.preventDefault();
+                if (dragOverStatus !== status) setDragOverStatus(status);
+              }}
+              onDragLeave={() => setDragOverStatus((current) => (current === status ? null : current))}
+              onDrop={(e) => handleDrop(e, status)}
             >
               <h2>
                 {APARTMENT_STATUS_LABELS[status]}{" "}
