@@ -1,6 +1,6 @@
 import { APARTMENT_STATUSES, type Apartment, type ApartmentStatus } from "../types";
 import type { ApartmentInput } from "../data/apartments";
-import { todayISODate } from "./date";
+import { todayISODate, toDateTimeLocalInputValue } from "./date";
 
 export interface ApartmentFormValues {
   title: string;
@@ -41,7 +41,7 @@ export function apartmentToFormValues(apartment: Apartment): ApartmentFormValues
     originalLink: apartment.originalLink,
     entryDate: apartment.entryDate,
     status: apartment.status,
-    visitDate: apartment.visitDate ?? "",
+    visitDate: toDateTimeLocalInputValue(apartment.visitDate),
     visitAddress: apartment.visitAddress ?? apartment.address,
     notes: apartment.notes,
   };

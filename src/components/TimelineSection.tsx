@@ -22,7 +22,7 @@ function TimelineSection({ apartmentId }: TimelineSectionProps) {
         className="case-file-timeline"
         apartmentId={apartmentId}
         cardKey="timeline"
-        title="Timeline (oldest first)"
+        title="Timeline"
         headerExtra={
           <button type="button" className="btn btn-sm" onClick={() => setAdding(true)}>
             + Add event

@@ -1,11 +1,11 @@
 import { Link } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
-import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { Apartment, ApartmentStatus } from "../types";
 import { countUnresolvedActionsForApartment } from "../data/actions";
 import { formatRent } from "../utils/rent";
 import { formatDate, formatDateTime } from "../utils/date";
 import { useSettings } from "../settings/useSettings";
+import StatusMenu from "./StatusMenu";
 
 interface ApartmentCardProps {
   apartment: Apartment;
@@ -37,23 +37,10 @@ function ApartmentCard({ apartment, onStatusChange }: ApartmentCardProps) {
             <div className="apartment-card-address">{apartment.address}</div>
           )}
         </div>
-        <details className="status-menu">
-          <summary className="status-menu-trigger" aria-label="Move to another status">
-            ⇄
-          </summary>
-          <div className="status-menu-list">
-            {APARTMENT_STATUSES.filter((s) => s !== apartment.status).map((status) => (
-              <button
-                key={status}
-                type="button"
-                className="status-menu-option"
-                onClick={() => onStatusChange(apartment, status)}
-              >
-                {APARTMENT_STATUS_LABELS[status]}
-              </button>
-            ))}
-          </div>
-        </details>
+        <StatusMenu
+          currentStatus={apartment.status}
+          onSelect={(status) => onStatusChange(apartment, status)}
+        />
       </div>
 
       <div className="apartment-card-rent">

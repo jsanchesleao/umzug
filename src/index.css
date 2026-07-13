@@ -652,6 +652,14 @@ button {
   font-size: 0.85em;
 }
 
+.form-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  cursor: pointer;
+}
+
 /* Modal */
 
 .modal-overlay {
@@ -809,7 +817,7 @@ button {
 .case-file-title-row {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   gap: 0.5rem;
 }
 
@@ -819,6 +827,10 @@ button {
   gap: 0.5rem;
   flex-wrap: wrap;
   min-width: 0;
+}
+
+.case-file-title-group-heading {
+    margin: 0;
 }
 
 .case-file-meta {
@@ -1153,6 +1165,21 @@ button {
 .timeline-event-details p {
   margin: 0.5em 0 0;
   white-space: pre-wrap;
+}
+
+.timeline-event-actions {
+  margin: 0 0 0.75rem;
+  font-size: 0.9em;
+  color: var(--color-text);
+}
+
+.timeline-event-actions summary {
+  cursor: pointer;
+  color: var(--color-info);
+}
+
+.timeline-event-actions .action-list {
+  margin-top: 0.5em;
 }
 
 /* Photos */

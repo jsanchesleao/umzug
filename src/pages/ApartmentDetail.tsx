@@ -8,6 +8,8 @@ import ApartmentModal from "../components/ApartmentModal";
 import P2PSendModal from "../components/P2PSendModal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import StatusBadge from "../components/StatusBadge";
+import StatusMenu from "../components/StatusMenu";
+import StatusChangeModal from "../components/StatusChangeModal";
 import UnresolvedActionsSummary from "../components/UnresolvedActionsSummary";
 import ActionList from "../components/ActionList";
 import TimelineSection from "../components/TimelineSection";
@@ -16,6 +18,7 @@ import CollapsibleSection from "../components/CollapsibleSection";
 import { formatRent } from "../utils/rent";
 import { formatDate, formatDateTime } from "../utils/date";
 import { useSettings } from "../settings/useSettings";
+import type { ApartmentStatus } from "../types";
 
 function ApartmentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -36,6 +39,7 @@ function ApartmentDetail() {
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
   const [syncedApartmentId, setSyncedApartmentId] = useState<string | null>(null);
+  const [statusChangeTarget, setStatusChangeTarget] = useState<ApartmentStatus | null>(null);
   const menuRef = useRef<HTMLDetailsElement>(null);
 
   function closeMenu() {
@@ -92,8 +96,9 @@ function ApartmentDetail() {
           <header className="case-file-header">
             <div className="case-file-title-row">
               <div className="case-file-title-group">
-                <h1>{apartment.title}</h1>
+                <h1 className="case-file-title-group-heading">{apartment.title}</h1>
                 <StatusBadge status={apartment.status} />
+                <StatusMenu currentStatus={apartment.status} onSelect={setStatusChangeTarget} />
               </div>
 
               <details className="status-menu" ref={menuRef}>
@@ -224,6 +229,14 @@ function ApartmentDetail() {
       </div>
 
       {editing && <ApartmentModal apartment={apartment} onClose={() => setEditing(false)} />}
+
+      {statusChangeTarget && (
+        <StatusChangeModal
+          apartment={apartment}
+          newStatus={statusChangeTarget}
+          onClose={() => setStatusChangeTarget(null)}
+        />
+      )}
 
       {sendingP2P && (
         <P2PSendModal

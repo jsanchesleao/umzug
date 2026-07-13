@@ -55,12 +55,15 @@ function TimelineEventItem({ event }: TimelineEventItemProps) {
         </details>
       )}
 
-      <ActionList
-        apartmentId={event.apartmentId}
-        eventId={event.id}
-        actions={actions}
-        emptyLabel="No actions attached to this event."
-      />
+      <details className="timeline-event-actions">
+        <summary>Actions ({actions.length})</summary>
+        <ActionList
+          apartmentId={event.apartmentId}
+          eventId={event.id}
+          actions={actions}
+          emptyLabel="No actions attached to this event."
+        />
+      </details>
 
       {editing && (
         <TimelineEventModal event={event} apartmentId={event.apartmentId} onClose={() => setEditing(false)} />

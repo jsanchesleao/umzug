@@ -21,8 +21,14 @@ export function formatDate(isoDate: string, format: DateFormatOption): string {
   }
 }
 
+export function toDateTimeLocalInputValue(value: string | null | undefined): string {
+  if (!value) return "";
+  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) return `${value}T00:00`;
+  return value.slice(0, 16);
+}
+
 export function formatDateTime(isoDateTime: string, format: DateFormatOption): string {
-  const date = new Date(isoDateTime);
+  const date = new Date(toDateTimeLocalInputValue(isoDateTime));
   if (Number.isNaN(date.getTime())) return isoDateTime;
 
   const localIsoDate = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(

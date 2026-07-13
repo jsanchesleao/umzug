@@ -2,13 +2,17 @@ import { useMemo, useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
 import KanbanBoard from "../components/KanbanBoard";
 import ApartmentModal from "../components/ApartmentModal";
+import StatusChangeModal from "../components/StatusChangeModal";
 import UnresolvedActionsPanel from "../components/UnresolvedActionsPanel";
 import FilterBar from "../components/FilterBar";
-import { listApartments, updateApartment } from "../data/apartments";
+import { listApartments } from "../data/apartments";
 import { getUnresolvedActions } from "../data/actions";
 import type { Apartment, ApartmentStatus } from "../types";
 
-type ModalState = { mode: "add" } | { mode: "edit"; apartment: Apartment } | null;
+type ModalState =
+  | { mode: "add" }
+  | { mode: "status"; apartment: Apartment; newStatus: ApartmentStatus }
+  | null;
 
 function Dashboard() {
   const apartments = useLiveQuery(() => listApartments(), []);
@@ -37,21 +41,9 @@ function Dashboard() {
     });
   }, [apartments, search, onlyUnresolved, unresolvedApartmentIds]);
 
-  async function handleStatusChange(apartment: Apartment, newStatus: ApartmentStatus) {
+  function handleStatusChange(apartment: Apartment, newStatus: ApartmentStatus) {
     if (newStatus === apartment.status) return;
-
-    if (newStatus === "VisitScheduled") {
-      // Visit date/address are required for this status — prompt via the edit modal
-      // instead of silently switching with empty visit fields.
-      setModalState({ mode: "edit", apartment: { ...apartment, status: "VisitScheduled" } });
-      return;
-    }
-
-    const wasVisitScheduled = apartment.status === "VisitScheduled";
-    await updateApartment(apartment.id, {
-      status: newStatus,
-      ...(wasVisitScheduled ? { visitDate: null, visitAddress: null } : {}),
-    });
+    setModalState({ mode: "status", apartment, newStatus });
   }
 
   return (
@@ -78,9 +70,14 @@ function Dashboard() {
         +
       </button>
 
-      {modalState && (
-        <ApartmentModal
-          apartment={modalState.mode === "edit" ? modalState.apartment : undefined}
+      {modalState?.mode === "add" && (
+        <ApartmentModal onClose={() => setModalState(null)} />
+      )}
+
+      {modalState?.mode === "status" && (
+        <StatusChangeModal
+          apartment={modalState.apartment}
+          newStatus={modalState.newStatus}
           onClose={() => setModalState(null)}
         />
       )}
