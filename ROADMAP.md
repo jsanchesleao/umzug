@@ -55,17 +55,17 @@ At this point the core CRUD app is functionally complete end-to-end (create an a
 
 ## Milestone 6 — Import / Export
 
-- [ ] Single-apartment export (nested JSON per §4.6 schema).
-- [ ] Bulk export (array of the same shape).
-- [ ] Import: file picker, shape detection (array vs. single object), all-or-nothing transaction per file, error handling for malformed input.
-- [ ] ID-collision prompt (overwrite vs. import-as-copy, default per resolved open question).
+- [x] Single-apartment export (nested JSON per §4.6 schema).
+- [x] Bulk export (array of the same shape).
+- [x] Import: file picker, shape detection (array vs. single object), all-or-nothing transaction per file, error handling for malformed input.
+- [x] ID-collision prompt (overwrite vs. import-as-copy, default per resolved open question).
 
 ## Milestone 7 — PWA & Deployment
 
-- [ ] Web app manifest (name, icons, standalone display, theme colors).
-- [ ] Service worker precaching via `vite-plugin-pwa`; verify full offline usability after first load.
-- [ ] GitHub Pages deployment pipeline; verify subpath asset/routing correctness.
-- [ ] Client-side-routing fallback for deep links (404.html or hash-routing workaround) — verify `/apartments/:id` loads directly, not just via in-app nav.
+- [x] Web app manifest (name, icons, standalone display, theme colors).
+- [x] Service worker precaching via `vite-plugin-pwa`; verify full offline usability after first load.
+- [x] GitHub Pages deployment pipeline; verify subpath asset/routing correctness.
+- [x] Client-side-routing fallback for deep links (404.html or hash-routing workaround) — verify `/apartments/:id` loads directly, not just via in-app nav.
 
 ## Milestone 8 — Accessibility & Non-Functional Polish
 

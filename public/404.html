@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Umzug</title>
+    <script>
+      // GitHub Pages has no server-side rewrite, so a direct deep link like
+      // /umzug/apartments/:id 404s. Redirect it to the app shell, encoding
+      // the intended path in the query string; index.html decodes it back
+      // via history.replaceState before the router mounts (spa-github-pages
+      // pattern: https://github.com/rafgraph/spa-github-pages).
+      var pathSegmentsToKeep = 1; // keep the "/umzug" repo-name segment
+
+      var l = window.location;
+      l.replace(
+        l.protocol +
+          "//" +
+          l.hostname +
+          (l.port ? ":" + l.port : "") +
+          l.pathname.split("/").slice(0, 1 + pathSegmentsToKeep).join("/") +
+          "/?/" +
+          l.pathname
+            .slice(1)
+            .split("/")
+            .slice(pathSegmentsToKeep)
+            .join("/")
+            .replace(/&/g, "~and~") +
+          (l.search ? "&" + l.search.slice(1).replace(/&/g, "~and~") : "") +
+          l.hash,
+      );
+    </script>
+  </head>
+  <body></body>
+</html>

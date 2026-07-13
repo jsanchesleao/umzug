@@ -3,6 +3,7 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { deleteApartmentCascade, getApartment, updateApartment } from "../data/apartments";
 import { listActionsForApartment } from "../data/actions";
+import { buildApartmentExport, downloadJson } from "../data/importExport";
 import ApartmentModal from "../components/ApartmentModal";
 import ConfirmDialog from "../components/ConfirmDialog";
 import StatusBadge from "../components/StatusBadge";
@@ -60,6 +61,12 @@ function ApartmentDetail() {
     navigate("/");
   }
 
+  async function handleExport() {
+    const exported = await buildApartmentExport(apartment!.id);
+    const slug = apartment!.address.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "apartment";
+    downloadJson(`umzug-${slug}.json`, exported);
+  }
+
   return (
     <main className="case-file">
       <Link to="/" className="back-link">
@@ -90,6 +97,9 @@ function ApartmentDetail() {
         <div className="case-file-actions">
           <button type="button" className="btn" onClick={() => setEditing(true)}>
             Edit
+          </button>
+          <button type="button" className="btn" onClick={handleExport}>
+            Export this file
           </button>
           <button
             type="button"

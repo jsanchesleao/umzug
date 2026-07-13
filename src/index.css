@@ -113,6 +113,61 @@ button {
   padding-bottom: 5rem;
 }
 
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Import / export */
+
+.import-export-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.5em 0.75em;
+  border-radius: var(--radius);
+  font-size: 0.85em;
+}
+
+.banner-success {
+  background: rgba(111, 174, 122, 0.14);
+  border: 1px solid var(--status-confirmed);
+  color: var(--color-text);
+}
+
+.banner-error {
+  background: rgba(176, 71, 61, 0.14);
+  border: 1px solid var(--color-danger);
+  color: var(--color-text);
+}
+
+.banner-dismiss {
+  background: transparent;
+  border: none;
+  color: inherit;
+  font-size: 1.1em;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 0.25em;
+}
+
 .kanban-tabs {
   display: none;
   gap: 0.5rem;
