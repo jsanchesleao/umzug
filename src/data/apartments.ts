@@ -37,10 +37,12 @@ export async function deleteApartmentCascade(id: string): Promise<void> {
     db.timelineEvents,
     db.actions,
     db.photos,
+    db.sketchPages,
     async () => {
       await db.actions.where("apartmentId").equals(id).delete();
       await db.timelineEvents.where("apartmentId").equals(id).delete();
       await db.photos.where("apartmentId").equals(id).delete();
+      await db.sketchPages.where("apartmentId").equals(id).delete();
       await db.apartments.delete(id);
     },
   );

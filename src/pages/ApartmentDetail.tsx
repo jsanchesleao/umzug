@@ -14,6 +14,7 @@ import UnresolvedActionsSummary from "../components/UnresolvedActionsSummary";
 import ActionList from "../components/ActionList";
 import TimelineSection from "../components/TimelineSection";
 import PhotoSection from "../components/PhotoSection";
+import SketchSection from "../components/SketchSection";
 import CollapsibleSection from "../components/CollapsibleSection";
 import { formatRent } from "../utils/rent";
 import { formatDate, formatDateTime } from "../utils/date";
@@ -132,7 +133,7 @@ function ApartmentDetail() {
                       checked={includePhotosInExport}
                       onChange={(e) => setIncludePhotosInExport(e.target.checked)}
                     />
-                    Include photos
+                    Include photos & sketches
                   </label>
                   <button
                     type="button"
@@ -211,6 +212,7 @@ function ApartmentDetail() {
 
         <div className="case-file-col-right">
           <PhotoSection apartmentId={apartment.id} />
+          <SketchSection apartmentId={apartment.id} />
 
           <CollapsibleSection
             className="case-file-actions-section"
@@ -249,7 +251,7 @@ function ApartmentDetail() {
       {confirmingDelete && (
         <ConfirmDialog
           title="Delete apartment"
-          message={`Delete ${apartment.title}? This will also delete its timeline events, actions, and photos. This cannot be undone.`}
+          message={`Delete ${apartment.title}? This will also delete its timeline events, actions, photos, and sketches. This cannot be undone.`}
           confirmLabel="Delete"
           danger
           onConfirm={handleDelete}

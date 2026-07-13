@@ -5,12 +5,14 @@ interface ModalProps {
   title: string;
   onClose: () => void;
   children: ReactNode;
+  variant?: "default" | "fullscreen";
 }
 
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
-function Modal({ title, onClose, children }: ModalProps) {
+function Modal({ title, onClose, children, variant = "default" }: ModalProps) {
+  const isFullscreen = variant === "fullscreen";
   const modalRef = useRef<HTMLDivElement>(null);
 
   // Move focus into the dialog on open (unless a control inside it already
@@ -60,9 +62,12 @@ function Modal({ title, onClose, children }: ModalProps) {
   }, [onClose]);
 
   return (
-    <div className="modal-overlay" onClick={onClose}>
+    <div
+      className={isFullscreen ? "modal-overlay modal-overlay--fullscreen" : "modal-overlay"}
+      onClick={onClose}
+    >
       <div
-        className="modal"
+        className={isFullscreen ? "modal modal--fullscreen" : "modal"}
         role="dialog"
         aria-modal="true"
         aria-label={title}

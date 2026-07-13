@@ -143,7 +143,7 @@ function P2PSendModal(props: P2PSendModalProps & Scope) {
               disabled={state.phase === "sending"}
               onChange={(e) => setIncludePhotos(e.target.checked)}
             />
-            Include photos
+            Include photos & sketches
           </label>
 
           <div className="p2p-qr">

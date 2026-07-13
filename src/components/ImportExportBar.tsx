@@ -125,7 +125,7 @@ function ImportExportBar() {
               checked={includePhotos}
               onChange={(e) => setIncludePhotos(e.target.checked)}
             />
-            Include photos
+            Include photos & sketches
           </label>
           <button
             type="button"

@@ -3,6 +3,7 @@ import { getApartment, listApartments } from "./apartments";
 import { listTimelineEventsForApartment } from "./timelineEvents";
 import { listActionsForApartment } from "./actions";
 import { listPhotosForApartment } from "./photos";
+import { listSketchPagesForApartment } from "./sketchPages";
 import {
   ACTION_STATUSES,
   ACTION_URGENCIES,
@@ -35,6 +36,12 @@ export interface ExportedPhoto {
   dataUrl: string;
 }
 
+export interface ExportedSketchPage {
+  id: string;
+  order: number;
+  dataUrl: string;
+}
+
 export interface ExportedApartment {
   id: string;
   title: string;
@@ -52,6 +59,7 @@ export interface ExportedApartment {
   timeline: ExportedTimelineEvent[];
   actions: ExportedAction[];
   photos: ExportedPhoto[];
+  sketches: ExportedSketchPage[];
 }
 
 function toExportedAction(action: Action): ExportedAction {
@@ -81,14 +89,16 @@ async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
 export async function buildApartmentExport(
   apartmentId: string,
   includePhotos = true,
+  includeSketches = includePhotos,
 ): Promise<ExportedApartment> {
   const apartment = await getApartment(apartmentId);
   if (!apartment) throw new Error(`Apartment ${apartmentId} not found`);
 
-  const [events, allActions, photos] = await Promise.all([
+  const [events, allActions, photos, sketchPages] = await Promise.all([
     listTimelineEventsForApartment(apartmentId),
     listActionsForApartment(apartmentId),
     includePhotos ? listPhotosForApartment(apartmentId) : Promise.resolve([]),
+    includeSketches ? listSketchPagesForApartment(apartmentId) : Promise.resolve([]),
   ]);
 
   const timeline: ExportedTimelineEvent[] = events.map((event) => ({
@@ -109,6 +119,14 @@ export async function buildApartmentExport(
     })),
   );
 
+  const exportedSketches: ExportedSketchPage[] = await Promise.all(
+    sketchPages.map(async (page) => ({
+      id: page.id,
+      order: page.order,
+      dataUrl: await blobToDataUrl(page.blob),
+    })),
+  );
+
   return {
     id: apartment.id,
     title: apartment.title,
@@ -126,13 +144,17 @@ export async function buildApartmentExport(
     timeline,
     actions: directActions,
     photos: exportedPhotos,
+    sketches: exportedSketches,
   };
 }
 
-export async function buildAllApartmentsExport(includePhotos = false): Promise<ExportedApartment[]> {
+export async function buildAllApartmentsExport(
+  includePhotos = false,
+  includeSketches = includePhotos,
+): Promise<ExportedApartment[]> {
   const apartments = await listApartments();
   return Promise.all(
-    apartments.map((apartment) => buildApartmentExport(apartment.id, includePhotos)),
+    apartments.map((apartment) => buildApartmentExport(apartment.id, includePhotos, includeSketches)),
   );
 }
 
@@ -184,6 +206,15 @@ function isExportedPhoto(value: unknown): value is ExportedPhoto {
   );
 }
 
+function isExportedSketchPage(value: unknown): value is ExportedSketchPage {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    typeof value.order === "number" &&
+    typeof value.dataUrl === "string"
+  );
+}
+
 function isExportedApartment(value: unknown): value is ExportedApartment {
   if (!isRecord(value)) return false;
   return (
@@ -205,7 +236,9 @@ function isExportedApartment(value: unknown): value is ExportedApartment {
     Array.isArray(value.actions) &&
     value.actions.every(isExportedAction) &&
     Array.isArray(value.photos) &&
-    value.photos.every(isExportedPhoto)
+    value.photos.every(isExportedPhoto) &&
+    Array.isArray(value.sketches) &&
+    value.sketches.every(isExportedSketchPage)
   );
 }
 
@@ -240,6 +273,18 @@ function normalizeLegacyTitle(value: unknown): unknown {
 }
 
 /**
+ * Older export files predate the `sketches` field. Default to an empty array
+ * so those files still import cleanly.
+ */
+function normalizeLegacySketches(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  if (!Array.isArray(value.sketches)) {
+    return { ...value, sketches: [] };
+  }
+  return value;
+}
+
+/**
  * Parses raw import-file text into a list of apartments, detecting whether the
  * file holds a single apartment (object) or a bulk export (array). Throws on
  * malformed JSON or a shape that doesn't match the export schema — callers
@@ -256,7 +301,10 @@ export function parseImportPayload(text: string): ExportedApartment[] {
   const candidates = Array.isArray(parsed) ? parsed : [parsed];
   if (candidates.length === 0) return [];
 
-  const normalized = candidates.map(normalizeLegacyRent).map(normalizeLegacyTitle);
+  const normalized = candidates
+    .map(normalizeLegacyRent)
+    .map(normalizeLegacyTitle)
+    .map(normalizeLegacySketches);
 
   if (!normalized.every(isExportedApartment)) {
     throw new Error("File does not match the expected apartment export shape.");
@@ -302,13 +350,19 @@ export async function importApartments(
   // isn't tracked by IndexedDB, so awaiting it inside a Dexie transaction
   // causes the transaction to auto-commit early.
   const photoBlobs = new Map<string, Blob>();
-  await Promise.all(
-    apartments.flatMap((apartment) =>
+  const sketchBlobs = new Map<string, Blob>();
+  await Promise.all([
+    ...apartments.flatMap((apartment) =>
       apartment.photos.map(async (photo) => {
         photoBlobs.set(photo.dataUrl, await dataUrlToBlob(photo.dataUrl));
       }),
     ),
-  );
+    ...apartments.flatMap((apartment) =>
+      apartment.sketches.map(async (page) => {
+        sketchBlobs.set(page.dataUrl, await dataUrlToBlob(page.dataUrl));
+      }),
+    ),
+  ]);
 
   await db.transaction(
     "rw",
@@ -316,6 +370,7 @@ export async function importApartments(
     db.timelineEvents,
     db.actions,
     db.photos,
+    db.sketchPages,
     async () => {
       for (const exported of apartments) {
         const existing = await db.apartments.get(exported.id);
@@ -327,6 +382,7 @@ export async function importApartments(
             await db.actions.where("apartmentId").equals(exported.id).delete();
             await db.timelineEvents.where("apartmentId").equals(exported.id).delete();
             await db.photos.where("apartmentId").equals(exported.id).delete();
+            await db.sketchPages.where("apartmentId").equals(exported.id).delete();
             await db.apartments.delete(exported.id);
             outcome.overwritten++;
           } else {
@@ -397,6 +453,17 @@ export async function importApartments(
             caption: photo.caption,
             blob: photoBlobs.get(photo.dataUrl)!,
             createdAt: now,
+          });
+        }
+
+        for (const page of exported.sketches) {
+          await db.sketchPages.add({
+            id: regenerateNestedIds ? crypto.randomUUID() : page.id,
+            apartmentId,
+            order: page.order,
+            blob: sketchBlobs.get(page.dataUrl)!,
+            createdAt: now,
+            updatedAt: now,
           });
         }
       }

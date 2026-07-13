@@ -78,6 +78,15 @@ export interface Photo {
   createdAt: string;
 }
 
+export interface SketchPage {
+  id: string;
+  apartmentId: string;
+  order: number;
+  blob: Blob;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type ThemeMode = "system" | "light" | "dark";
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
