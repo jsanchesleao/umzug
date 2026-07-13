@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { createPhoto, listPhotosForApartment } from "../data/photos";
 import { compressImage } from "../utils/image";
 import PhotoThumb from "./PhotoThumb";
+import CollapsibleSection from "./CollapsibleSection";
 
 interface PhotoSectionProps {
   apartmentId: string;
@@ -34,28 +35,33 @@ function PhotoSection({ apartmentId }: PhotoSectionProps) {
   }
 
   return (
-    <section className="case-file-photos">
-      <div className="section-header">
-        <h2>Photos</h2>
-        <button
-          type="button"
-          className="btn btn-sm"
-          onClick={() => fileInputRef.current?.click()}
-          disabled={uploading}
-        >
-          {uploading ? "Adding…" : "+ Add photo"}
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept="image/*"
-          multiple
-          className="visually-hidden"
-          aria-label="Add photos"
-          onChange={handleFileChange}
-        />
-      </div>
-
+    <CollapsibleSection
+      className="case-file-photos"
+      apartmentId={apartmentId}
+      cardKey="photos"
+      title="Photos"
+      headerExtra={
+        <>
+          <button
+            type="button"
+            className="btn btn-sm"
+            onClick={() => fileInputRef.current?.click()}
+            disabled={uploading}
+          >
+            {uploading ? "Adding…" : "+ Add photo"}
+          </button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="visually-hidden"
+            aria-label="Add photos"
+            onChange={handleFileChange}
+          />
+        </>
+      }
+    >
       {error && <p className="field-error">{error}</p>}
 
       {photos && photos.length > 0 ? (
@@ -74,7 +80,7 @@ function PhotoSection({ apartmentId }: PhotoSectionProps) {
           <span className="photo-empty-widget-hint">Click to add photos of this apartment</span>
         </button>
       )}
-    </section>
+    </CollapsibleSection>
   );
 }
 

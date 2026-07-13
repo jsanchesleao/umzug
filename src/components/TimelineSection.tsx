@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { listTimelineEventsForApartment } from "../data/timelineEvents";
 import TimelineEventItem from "./TimelineEventItem";
 import TimelineEventModal from "./TimelineEventModal";
+import CollapsibleSection from "./CollapsibleSection";
 
 interface TimelineSectionProps {
   apartmentId: string;
@@ -16,21 +17,26 @@ function TimelineSection({ apartmentId }: TimelineSectionProps) {
   );
 
   return (
-    <section className="case-file-timeline">
-      <div className="section-header">
-        <h2>Timeline (oldest first)</h2>
-        <button type="button" className="btn btn-sm" onClick={() => setAdding(true)}>
-          + Add event
-        </button>
-      </div>
-
-      {(events ?? []).map((event) => (
-        <TimelineEventItem key={event.id} event={event} />
-      ))}
-      {events && events.length === 0 && <p className="empty-column">No events yet.</p>}
+    <>
+      <CollapsibleSection
+        className="case-file-timeline"
+        apartmentId={apartmentId}
+        cardKey="timeline"
+        title="Timeline (oldest first)"
+        headerExtra={
+          <button type="button" className="btn btn-sm" onClick={() => setAdding(true)}>
+            + Add event
+          </button>
+        }
+      >
+        {(events ?? []).map((event) => (
+          <TimelineEventItem key={event.id} event={event} />
+        ))}
+        {events && events.length === 0 && <p className="empty-column">No events yet.</p>}
+      </CollapsibleSection>
 
       {adding && <TimelineEventModal apartmentId={apartmentId} onClose={() => setAdding(false)} />}
-    </section>
+    </>
   );
 }
 

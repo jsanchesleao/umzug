@@ -23,12 +23,17 @@ interface PendingImport {
 
 function ImportExportBar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const menuRef = useRef<HTMLDetailsElement>(null);
   const [status, setStatus] = useState<Status>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
   const [includePhotos, setIncludePhotos] = useState(false);
   const [p2pModal, setP2PModal] = useState<"send" | "receive" | null>(null);
   const [initialPairingCode, setInitialPairingCode] = useState<string | undefined>(undefined);
   const [searchParams, setSearchParams] = useSearchParams();
+
+  function closeMenu() {
+    if (menuRef.current) menuRef.current.open = false;
+  }
 
   // A scanned QR code deep-links back into the app with ?p2p=<code>; open the
   // Receive modal pre-filled with it and strip the param so a reload/back
@@ -99,33 +104,62 @@ function ImportExportBar() {
 
   return (
     <div className="import-export-bar">
-      <button type="button" className="btn btn-sm" onClick={handleExportAll}>
-        Export all
-      </button>
-      <label className="filter-checkbox">
-        <input
-          type="checkbox"
-          checked={includePhotos}
-          onChange={(e) => setIncludePhotos(e.target.checked)}
-        />
-        Include photos
-      </label>
-      <button type="button" className="btn btn-sm" onClick={() => fileInputRef.current?.click()}>
-        Import
-      </button>
-      <button type="button" className="btn btn-sm" onClick={() => setP2PModal("send")}>
-        Send (all)
-      </button>
-      <button
-        type="button"
-        className="btn btn-sm"
-        onClick={() => {
-          setInitialPairingCode(undefined);
-          setP2PModal("receive");
-        }}
-      >
-        Receive
-      </button>
+      <details className="status-menu" ref={menuRef}>
+        <summary className="status-menu-trigger" aria-label="Import and export actions">
+          ☰
+        </summary>
+        <div className="status-menu-list dashboard-menu-list">
+          <button
+            type="button"
+            className="status-menu-option"
+            onClick={() => {
+              handleExportAll();
+              closeMenu();
+            }}
+          >
+            Export all
+          </button>
+          <label className="case-file-menu-checkbox">
+            <input
+              type="checkbox"
+              checked={includePhotos}
+              onChange={(e) => setIncludePhotos(e.target.checked)}
+            />
+            Include photos
+          </label>
+          <button
+            type="button"
+            className="status-menu-option"
+            onClick={() => {
+              fileInputRef.current?.click();
+              closeMenu();
+            }}
+          >
+            Import
+          </button>
+          <button
+            type="button"
+            className="status-menu-option"
+            onClick={() => {
+              setP2PModal("send");
+              closeMenu();
+            }}
+          >
+            Send (all)
+          </button>
+          <button
+            type="button"
+            className="status-menu-option"
+            onClick={() => {
+              setInitialPairingCode(undefined);
+              setP2PModal("receive");
+              closeMenu();
+            }}
+          >
+            Receive
+          </button>
+        </div>
+      </details>
       <input
         ref={fileInputRef}
         type="file"

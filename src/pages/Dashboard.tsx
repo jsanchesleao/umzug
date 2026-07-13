@@ -4,7 +4,6 @@ import KanbanBoard from "../components/KanbanBoard";
 import ApartmentModal from "../components/ApartmentModal";
 import UnresolvedActionsPanel from "../components/UnresolvedActionsPanel";
 import FilterBar from "../components/FilterBar";
-import ImportExportBar from "../components/ImportExportBar";
 import { listApartments, updateApartment } from "../data/apartments";
 import { getUnresolvedActions } from "../data/actions";
 import type { Apartment, ApartmentStatus } from "../types";
@@ -58,8 +57,6 @@ function Dashboard() {
   return (
     <main className="dashboard">
       <h1>Dashboard</h1>
-
-      <ImportExportBar />
 
       <UnresolvedActionsPanel actions={unresolvedActions ?? []} apartments={apartments ?? []} />
 

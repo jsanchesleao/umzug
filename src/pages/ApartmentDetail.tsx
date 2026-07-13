@@ -12,6 +12,7 @@ import UnresolvedActionsSummary from "../components/UnresolvedActionsSummary";
 import ActionList from "../components/ActionList";
 import TimelineSection from "../components/TimelineSection";
 import PhotoSection from "../components/PhotoSection";
+import CollapsibleSection from "../components/CollapsibleSection";
 import { formatRent } from "../utils/rent";
 import { formatDate, formatDateTime } from "../utils/date";
 import { useSettings } from "../settings/useSettings";
@@ -176,8 +177,12 @@ function ApartmentDetail() {
             <UnresolvedActionsSummary apartmentId={apartment.id} />
           </header>
 
-          <section className="case-file-notes">
-            <h2>Notes</h2>
+          <CollapsibleSection
+            className="case-file-notes"
+            apartmentId={apartment.id}
+            cardKey="notes"
+            title="Notes"
+          >
             <textarea
               rows={6}
               value={notes}
@@ -194,7 +199,7 @@ function ApartmentDetail() {
             >
               {savingNotes ? "Saving…" : "Save notes"}
             </button>
-          </section>
+          </CollapsibleSection>
 
           <TimelineSection apartmentId={apartment.id} />
         </div>
@@ -202,15 +207,19 @@ function ApartmentDetail() {
         <div className="case-file-col-right">
           <PhotoSection apartmentId={apartment.id} />
 
-          <section className="case-file-actions-section">
-            <h2>Actions</h2>
+          <CollapsibleSection
+            className="case-file-actions-section"
+            apartmentId={apartment.id}
+            cardKey="actions"
+            title="Actions"
+          >
             <ActionList
               apartmentId={apartment.id}
               eventId={null}
               actions={directActions ?? []}
               emptyLabel="No actions on this apartment yet."
             />
-          </section>
+          </CollapsibleSection>
         </div>
       </div>
 

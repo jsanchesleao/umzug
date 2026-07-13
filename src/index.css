@@ -35,6 +35,8 @@
   --radius: 4px;
   --radius-sm: 2px;
 
+  --transition-collapse: 220ms ease-in-out;
+
   --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
   --font-mono:
     "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
@@ -163,11 +165,18 @@ button {
 /* Import / export */
 
 .import-export-bar {
+  position: relative;
   display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+}
+
+.import-export-bar .banner {
+  position: absolute;
+  top: calc(100% + 0.5rem);
+  left: 0;
+  width: max-content;
+  max-width: min(90vw, 22rem);
+  z-index: 15;
 }
 
 .banner {
@@ -483,6 +492,12 @@ button {
   min-width: 13rem;
 }
 
+.dashboard-menu-list {
+  min-width: 12rem;
+  left: 0;
+  right: auto;
+}
+
 .case-file-menu-checkbox {
   display: flex;
   align-items: center;
@@ -514,11 +529,48 @@ button {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
 }
 
-.settings-button {
-  position: fixed;
-  top: 1rem;
-  right: 1rem;
+.app-header {
+  position: sticky;
+  top: 0;
   z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: var(--color-bg-raised);
+  border-bottom: 1px solid var(--color-border-strong);
+}
+
+.app-header-start {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.app-header-menu-slot {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  width: 2.2rem;
+  min-width: 44px;
+}
+
+.app-header-title {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--color-text);
+  text-decoration: none;
+}
+
+.app-header-title:hover,
+.app-header-title:focus-visible {
+  color: var(--color-primary);
+}
+
+.app-header-settings {
   width: 2.5rem;
   height: 2.5rem;
   min-width: 44px;
@@ -532,11 +584,10 @@ button {
   color: var(--color-text);
   font-size: 1.2rem;
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
 }
 
-.settings-button:hover,
-.settings-button:focus-visible {
+.app-header-settings:hover,
+.app-header-settings:focus-visible {
   border-color: var(--color-primary);
   color: var(--color-primary);
 }
@@ -870,6 +921,57 @@ button {
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 0.5rem;
+}
+
+/* Collapsible section toggle (Notes/Timeline/Photos/Actions cards) */
+
+.collapsible-header {
+  cursor: default;
+}
+
+.collapsible-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
+.collapsible-toggle h2 {
+  margin: 0;
+}
+
+.collapsible-caret {
+  display: inline-block;
+  width: 1em;
+  font-size: 0.85em;
+  color: var(--color-muted);
+}
+
+.collapsible {
+  display: grid;
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--transition-collapse);
+}
+
+.collapsible--collapsed {
+  grid-template-rows: 0fr;
+}
+
+.collapsible-inner {
+  overflow: hidden;
+  min-height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .collapsible {
+    transition: none;
+  }
 }
 
 .case-file-unresolved,
