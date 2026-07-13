@@ -35,7 +35,8 @@ export const ACTION_STATUSES: ActionStatus[] = ["Unresolved", "Resolved", "Cance
 export interface Apartment {
   id: string;
   address: string;
-  rentCost: number;
+  coldRent: number | null;
+  warmRent: number | null;
   originalLink: string;
   entryDate: string;
   status: ApartmentStatus;

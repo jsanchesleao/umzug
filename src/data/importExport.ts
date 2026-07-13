@@ -38,7 +38,8 @@ export interface ExportedPhoto {
 export interface ExportedApartment {
   id: string;
   address: string;
-  rentCost: number;
+  coldRent: number | null;
+  warmRent: number | null;
   originalLink: string;
   entryDate: string;
   status: ApartmentStatus;
@@ -76,14 +77,17 @@ async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
   return response.blob();
 }
 
-export async function buildApartmentExport(apartmentId: string): Promise<ExportedApartment> {
+export async function buildApartmentExport(
+  apartmentId: string,
+  includePhotos = true,
+): Promise<ExportedApartment> {
   const apartment = await getApartment(apartmentId);
   if (!apartment) throw new Error(`Apartment ${apartmentId} not found`);
 
   const [events, allActions, photos] = await Promise.all([
     listTimelineEventsForApartment(apartmentId),
     listActionsForApartment(apartmentId),
-    listPhotosForApartment(apartmentId),
+    includePhotos ? listPhotosForApartment(apartmentId) : Promise.resolve([]),
   ]);
 
   const timeline: ExportedTimelineEvent[] = events.map((event) => ({
@@ -107,7 +111,8 @@ export async function buildApartmentExport(apartmentId: string): Promise<Exporte
   return {
     id: apartment.id,
     address: apartment.address,
-    rentCost: apartment.rentCost,
+    coldRent: apartment.coldRent,
+    warmRent: apartment.warmRent,
     originalLink: apartment.originalLink,
     entryDate: apartment.entryDate,
     status: apartment.status,
@@ -122,9 +127,11 @@ export async function buildApartmentExport(apartmentId: string): Promise<Exporte
   };
 }
 
-export async function buildAllApartmentsExport(): Promise<ExportedApartment[]> {
+export async function buildAllApartmentsExport(includePhotos = false): Promise<ExportedApartment[]> {
   const apartments = await listApartments();
-  return Promise.all(apartments.map((apartment) => buildApartmentExport(apartment.id)));
+  return Promise.all(
+    apartments.map((apartment) => buildApartmentExport(apartment.id, includePhotos)),
+  );
 }
 
 export function downloadJson(filename: string, data: unknown): void {
@@ -180,7 +187,8 @@ function isExportedApartment(value: unknown): value is ExportedApartment {
   return (
     typeof value.id === "string" &&
     typeof value.address === "string" &&
-    typeof value.rentCost === "number" &&
+    (value.coldRent === null || typeof value.coldRent === "number") &&
+    (value.warmRent === null || typeof value.warmRent === "number") &&
     typeof value.originalLink === "string" &&
     typeof value.entryDate === "string" &&
     APARTMENT_STATUSES.includes(value.status as ApartmentStatus) &&
@@ -196,6 +204,24 @@ function isExportedApartment(value: unknown): value is ExportedApartment {
     Array.isArray(value.photos) &&
     value.photos.every(isExportedPhoto)
   );
+}
+
+/**
+ * Older export files carried a single `rentCost` number instead of separate
+ * `coldRent`/`warmRent` fields. Map it into `coldRent` (matching how existing
+ * database records are migrated) so old exports still import cleanly.
+ */
+function normalizeLegacyRent(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  if (
+    typeof value.rentCost === "number" &&
+    value.coldRent === undefined &&
+    value.warmRent === undefined
+  ) {
+    const { rentCost, ...rest } = value;
+    return { ...rest, coldRent: rentCost, warmRent: null };
+  }
+  return value;
 }
 
 /**
@@ -215,11 +241,13 @@ export function parseImportPayload(text: string): ExportedApartment[] {
   const candidates = Array.isArray(parsed) ? parsed : [parsed];
   if (candidates.length === 0) return [];
 
-  if (!candidates.every(isExportedApartment)) {
+  const normalized = candidates.map(normalizeLegacyRent);
+
+  if (!normalized.every(isExportedApartment)) {
     throw new Error("File does not match the expected apartment export shape.");
   }
 
-  return candidates;
+  return normalized;
 }
 
 export async function detectCollisions(apartments: ExportedApartment[]): Promise<string[]> {
@@ -246,6 +274,18 @@ export async function importApartments(
   resolution: CollisionResolution,
 ): Promise<ImportOutcome> {
   const outcome: ImportOutcome = { inserted: 0, overwritten: 0, copied: 0 };
+
+  // Resolve photo data URLs to Blobs before opening the transaction: fetch()
+  // isn't tracked by IndexedDB, so awaiting it inside a Dexie transaction
+  // causes the transaction to auto-commit early.
+  const photoBlobs = new Map<string, Blob>();
+  await Promise.all(
+    apartments.flatMap((apartment) =>
+      apartment.photos.map(async (photo) => {
+        photoBlobs.set(photo.dataUrl, await dataUrlToBlob(photo.dataUrl));
+      }),
+    ),
+  );
 
   await db.transaction(
     "rw",
@@ -278,7 +318,8 @@ export async function importApartments(
         await db.apartments.add({
           id: apartmentId,
           address: exported.address,
-          rentCost: exported.rentCost,
+          coldRent: exported.coldRent,
+          warmRent: exported.warmRent,
           originalLink: exported.originalLink,
           entryDate: exported.entryDate,
           status: exported.status,
@@ -330,7 +371,7 @@ export async function importApartments(
             id: regenerateNestedIds ? crypto.randomUUID() : photo.id,
             apartmentId,
             caption: photo.caption,
-            blob: await dataUrlToBlob(photo.dataUrl),
+            blob: photoBlobs.get(photo.dataUrl)!,
             createdAt: now,
           });
         }

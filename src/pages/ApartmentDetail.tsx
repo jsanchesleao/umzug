@@ -10,6 +10,8 @@ import StatusBadge from "../components/StatusBadge";
 import UnresolvedActionsSummary from "../components/UnresolvedActionsSummary";
 import ActionList from "../components/ActionList";
 import TimelineSection from "../components/TimelineSection";
+import PhotoSection from "../components/PhotoSection";
+import { formatRent } from "../utils/rent";
 
 function ApartmentDetail() {
   const { id } = useParams<{ id: string }>();
@@ -23,6 +25,7 @@ function ApartmentDetail() {
 
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [includePhotosInExport, setIncludePhotosInExport] = useState(true);
   const [notes, setNotes] = useState("");
   const [notesDirty, setNotesDirty] = useState(false);
   const [savingNotes, setSavingNotes] = useState(false);
@@ -62,7 +65,7 @@ function ApartmentDetail() {
   }
 
   async function handleExport() {
-    const exported = await buildApartmentExport(apartment!.id);
+    const exported = await buildApartmentExport(apartment!.id, includePhotosInExport);
     const slug = apartment!.address.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-") || "apartment";
     downloadJson(`umzug-${slug}.json`, exported);
   }
@@ -73,77 +76,94 @@ function ApartmentDetail() {
         ← Back to dashboard
       </Link>
 
-      <header className="case-file-header">
-        <h1>{apartment.address}</h1>
-        <StatusBadge status={apartment.status} />
+      <div className="case-file-grid">
+        <div className="case-file-col-left">
+          <header className="case-file-header">
+            <h1>{apartment.address}</h1>
+            <StatusBadge status={apartment.status} />
 
-        <div className="case-file-meta">
-          <div>Rent: {apartment.rentCost}</div>
-          <div>
-            <a href={apartment.originalLink} target="_blank" rel="noopener noreferrer">
-              Original listing
-            </a>
-          </div>
-          <div>Entry date: {apartment.entryDate}</div>
+            <div className="case-file-meta">
+              <div>Cold rent: {formatRent(apartment.coldRent)}</div>
+              <div>Warm rent: {formatRent(apartment.warmRent)}</div>
+              <div>
+                <a href={apartment.originalLink} target="_blank" rel="noopener noreferrer">
+                  Original listing
+                </a>
+              </div>
+              <div>Entry date: {apartment.entryDate}</div>
+            </div>
+
+            {apartment.status === "VisitScheduled" && apartment.visitDate && (
+              <div className="case-file-visit">
+                <div>Visit date: {new Date(apartment.visitDate).toLocaleString()}</div>
+                <div>Visit address: {apartment.visitAddress}</div>
+              </div>
+            )}
+
+            <div className="case-file-actions">
+              <button type="button" className="btn" onClick={() => setEditing(true)}>
+                Edit
+              </button>
+              <button type="button" className="btn" onClick={handleExport}>
+                Export this file
+              </button>
+              <label className="filter-checkbox">
+                <input
+                  type="checkbox"
+                  checked={includePhotosInExport}
+                  onChange={(e) => setIncludePhotosInExport(e.target.checked)}
+                />
+                Include photos
+              </label>
+              <button
+                type="button"
+                className="btn btn-danger"
+                onClick={() => setConfirmingDelete(true)}
+              >
+                Delete
+              </button>
+            </div>
+
+            <UnresolvedActionsSummary apartmentId={apartment.id} />
+          </header>
+
+          <section className="case-file-notes">
+            <h2>Notes</h2>
+            <textarea
+              rows={6}
+              value={notes}
+              onChange={(e) => {
+                setNotes(e.target.value);
+                setNotesDirty(true);
+              }}
+            />
+            <button
+              type="button"
+              className="btn btn-primary"
+              onClick={handleSaveNotes}
+              disabled={!notesDirty || savingNotes}
+            >
+              {savingNotes ? "Saving…" : "Save notes"}
+            </button>
+          </section>
+
+          <TimelineSection apartmentId={apartment.id} />
         </div>
 
-        {apartment.status === "VisitScheduled" && apartment.visitDate && (
-          <div className="case-file-visit">
-            <div>Visit date: {new Date(apartment.visitDate).toLocaleString()}</div>
-            <div>Visit address: {apartment.visitAddress}</div>
-          </div>
-        )}
+        <div className="case-file-col-right">
+          <PhotoSection apartmentId={apartment.id} />
 
-        <div className="case-file-actions">
-          <button type="button" className="btn" onClick={() => setEditing(true)}>
-            Edit
-          </button>
-          <button type="button" className="btn" onClick={handleExport}>
-            Export this file
-          </button>
-          <button
-            type="button"
-            className="btn btn-danger"
-            onClick={() => setConfirmingDelete(true)}
-          >
-            Delete
-          </button>
+          <section className="case-file-actions-section">
+            <h2>Actions</h2>
+            <ActionList
+              apartmentId={apartment.id}
+              eventId={null}
+              actions={directActions ?? []}
+              emptyLabel="No actions on this apartment yet."
+            />
+          </section>
         </div>
-      </header>
-
-      <UnresolvedActionsSummary apartmentId={apartment.id} />
-
-      <section className="case-file-actions-section">
-        <h2>Actions</h2>
-        <ActionList
-          apartmentId={apartment.id}
-          eventId={null}
-          actions={directActions ?? []}
-          emptyLabel="No actions on this apartment yet."
-        />
-      </section>
-
-      <TimelineSection apartmentId={apartment.id} />
-
-      <section className="case-file-notes">
-        <h2>Notes</h2>
-        <textarea
-          rows={6}
-          value={notes}
-          onChange={(e) => {
-            setNotes(e.target.value);
-            setNotesDirty(true);
-          }}
-        />
-        <button
-          type="button"
-          className="btn btn-primary"
-          onClick={handleSaveNotes}
-          disabled={!notesDirty || savingNotes}
-        >
-          {savingNotes ? "Saving…" : "Save notes"}
-        </button>
-      </section>
+      </div>
 
       {editing && <ApartmentModal apartment={apartment} onClose={() => setEditing(false)} />}
 

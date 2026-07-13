@@ -3,6 +3,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { Apartment, ApartmentStatus } from "../types";
 import { countUnresolvedActionsForApartment } from "../data/actions";
+import { formatRent } from "../utils/rent";
 
 interface ApartmentCardProps {
   apartment: Apartment;
@@ -34,14 +35,29 @@ function ApartmentCard({ apartment, onStatusChange }: ApartmentCardProps) {
         <Link to={`/apartments/${apartment.id}`} className="apartment-card-address">
           {apartment.address}
         </Link>
-        {Boolean(unresolvedCount) && (
-          <span className="badge badge-unresolved" title="Unresolved actions">
-            {unresolvedCount}
-          </span>
-        )}
+        <details className="status-menu">
+          <summary className="status-menu-trigger" aria-label="Move to another status">
+            ⇄
+          </summary>
+          <div className="status-menu-list">
+            {APARTMENT_STATUSES.filter((s) => s !== apartment.status).map((status) => (
+              <button
+                key={status}
+                type="button"
+                className="status-menu-option"
+                onClick={() => onStatusChange(apartment, status)}
+              >
+                {APARTMENT_STATUS_LABELS[status]}
+              </button>
+            ))}
+          </div>
+        </details>
       </div>
 
-      <div className="apartment-card-rent">Rent: {apartment.rentCost}</div>
+      <div className="apartment-card-rent">
+        <div>Cold rent: {formatRent(apartment.coldRent)}</div>
+        <div>Warm rent: {formatRent(apartment.warmRent)}</div>
+      </div>
       <div className="apartment-card-entry">Entry date: {apartment.entryDate}</div>
 
       {apartment.status === "VisitScheduled" && apartment.visitDate && (
@@ -51,20 +67,11 @@ function ApartmentCard({ apartment, onStatusChange }: ApartmentCardProps) {
         </div>
       )}
 
-      <div className="form-field apartment-card-status">
-        <label htmlFor={`status-${apartment.id}`}>Status</label>
-        <select
-          id={`status-${apartment.id}`}
-          value={apartment.status}
-          onChange={(e) => onStatusChange(apartment, e.target.value as ApartmentStatus)}
-        >
-          {APARTMENT_STATUSES.map((status) => (
-            <option key={status} value={status}>
-              {APARTMENT_STATUS_LABELS[status]}
-            </option>
-          ))}
-        </select>
-      </div>
+      {Boolean(unresolvedCount) && (
+        <span className="badge badge-unresolved" title="Unresolved actions">
+          {unresolvedCount}
+        </span>
+      )}
     </article>
   );
 }

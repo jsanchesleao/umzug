@@ -42,7 +42,8 @@ type ActionStatus = "Unresolved" | "Resolved" | "Cancelled";
 |---|---|---|
 | `id` | string (UUID) | |
 | `address` | string | required |
-| `rentCost` | number | required; currency not modeled, see §8 |
+| `coldRent` | number \| null | optional; base rent excluding extra costs; currency not modeled, see §8 |
+| `warmRent` | number \| null | optional; rent including heating/water/other costs; currency not modeled, see §8 |
 | `originalLink` | string (URL) | required |
 | `entryDate` | ISO date | required; defaults to today on creation |
 | `status` | `ApartmentStatus` | required; defaults to `AwaitingVisitation` |
@@ -134,8 +135,8 @@ Two stacked sections plus a floating action button.
 ### 4.3 Add / Edit Apartment (modal)
 
 - Single modal form (opened from FAB for "add", or from an edit control for "edit"), styled as a quick-create form (reference point: Jira's "create issue" modal — compact, doesn't navigate away from the current view).
-- Fields: address*, rentCost*, originalLink*, entryDate* (defaults to today), status* (defaults to `AwaitingVisitation`), visitDate/visitAddress (shown conditionally when status is `VisitScheduled`), notes.
-- Client-side validation: required fields enforced; `rentCost` must be a positive number; `originalLink` must be a syntactically valid URL; `visitDate`/`visitAddress` required if and only if status is `VisitScheduled`.
+- Fields: address*, coldRent, warmRent, originalLink*, entryDate* (defaults to today), status* (defaults to `AwaitingVisitation`), visitDate/visitAddress (shown conditionally when status is `VisitScheduled`), notes.
+- Client-side validation: required fields enforced; `coldRent`/`warmRent` are optional but, if provided, must be non-negative numbers (either or both may be left blank, displayed as "Unknown" elsewhere in the UI); `originalLink` must be a syntactically valid URL; `visitDate`/`visitAddress` required if and only if status is `VisitScheduled`.
 - On submit, apartment is created/updated in IndexedDB and the modal closes; dashboard/case file reflects the change immediately (no reload).
 
 **Acceptance criteria**
@@ -170,7 +171,7 @@ Two stacked sections plus a floating action button.
 - **Export JSON schema** (nested/denormalized, independent of the internal normalized DB tables):
 ```json
 {
-  "id": "…", "address": "…", "rentCost": 0, "originalLink": "…",
+  "id": "…", "address": "…", "coldRent": 0, "warmRent": null, "originalLink": "…",
   "entryDate": "…", "status": "…", "visitDate": null, "visitAddress": null,
   "notes": "…", "createdAt": "…", "updatedAt": "…",
   "timeline": [

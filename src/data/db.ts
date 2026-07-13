@@ -15,6 +15,24 @@ class UmzugDB extends Dexie {
       actions: "id, apartmentId, eventId, status, dueDate",
       photos: "id, apartmentId",
     });
+
+    this.version(2)
+      .stores({
+        apartments: "id, status, entryDate",
+        timelineEvents: "id, apartmentId, date",
+        actions: "id, apartmentId, eventId, status, dueDate",
+        photos: "id, apartmentId",
+      })
+      .upgrade(async (tx) => {
+        await tx
+          .table("apartments")
+          .toCollection()
+          .modify((apartment: Record<string, unknown>) => {
+            apartment.coldRent = apartment.rentCost ?? null;
+            apartment.warmRent = null;
+            delete apartment.rentCost;
+          });
+      });
   }
 }
 

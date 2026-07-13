@@ -30,9 +30,10 @@ function ImportExportBar() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [status, setStatus] = useState<Status>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
+  const [includePhotos, setIncludePhotos] = useState(false);
 
   async function handleExportAll() {
-    const apartments = await buildAllApartmentsExport();
+    const apartments = await buildAllApartmentsExport(includePhotos);
     downloadJson(`umzug-export-${new Date().toISOString().slice(0, 10)}.json`, apartments);
   }
 
@@ -86,6 +87,14 @@ function ImportExportBar() {
       <button type="button" className="btn btn-sm" onClick={handleExportAll}>
         Export all
       </button>
+      <label className="filter-checkbox">
+        <input
+          type="checkbox"
+          checked={includePhotos}
+          onChange={(e) => setIncludePhotos(e.target.checked)}
+        />
+        Include photos
+      </label>
       <button type="button" className="btn btn-sm" onClick={() => fileInputRef.current?.click()}>
         Import
       </button>

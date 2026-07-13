@@ -4,7 +4,8 @@ import { todayISODate } from "./date";
 
 export interface ApartmentFormValues {
   address: string;
-  rentCost: string;
+  coldRent: string;
+  warmRent: string;
   originalLink: string;
   entryDate: string;
   status: ApartmentStatus;
@@ -18,7 +19,8 @@ export type ApartmentFormErrors = Partial<Record<keyof ApartmentFormValues, stri
 export function emptyApartmentFormValues(): ApartmentFormValues {
   return {
     address: "",
-    rentCost: "",
+    coldRent: "",
+    warmRent: "",
     originalLink: "",
     entryDate: todayISODate(),
     status: "AwaitingVisitation",
@@ -31,7 +33,8 @@ export function emptyApartmentFormValues(): ApartmentFormValues {
 export function apartmentToFormValues(apartment: Apartment): ApartmentFormValues {
   return {
     address: apartment.address,
-    rentCost: String(apartment.rentCost),
+    coldRent: apartment.coldRent != null ? String(apartment.coldRent) : "",
+    warmRent: apartment.warmRent != null ? String(apartment.warmRent) : "",
     originalLink: apartment.originalLink,
     entryDate: apartment.entryDate,
     status: apartment.status,
@@ -55,11 +58,18 @@ export function validateApartmentForm(values: ApartmentFormValues): ApartmentFor
 
   if (!values.address.trim()) errors.address = "Address is required.";
 
-  if (!values.rentCost.trim()) {
-    errors.rentCost = "Rent is required.";
-  } else {
-    const rent = Number(values.rentCost);
-    if (Number.isNaN(rent) || rent <= 0) errors.rentCost = "Rent must be a positive number.";
+  if (values.coldRent.trim()) {
+    const coldRent = Number(values.coldRent);
+    if (Number.isNaN(coldRent) || coldRent < 0) {
+      errors.coldRent = "Cold rent must be a non-negative number.";
+    }
+  }
+
+  if (values.warmRent.trim()) {
+    const warmRent = Number(values.warmRent);
+    if (Number.isNaN(warmRent) || warmRent < 0) {
+      errors.warmRent = "Warm rent must be a non-negative number.";
+    }
   }
 
   if (!values.originalLink.trim()) {
@@ -85,7 +95,8 @@ export function validateApartmentForm(values: ApartmentFormValues): ApartmentFor
 export function apartmentFormValuesToInput(values: ApartmentFormValues): ApartmentInput {
   return {
     address: values.address.trim(),
-    rentCost: Number(values.rentCost),
+    coldRent: values.coldRent.trim() ? Number(values.coldRent) : null,
+    warmRent: values.warmRent.trim() ? Number(values.warmRent) : null,
     originalLink: values.originalLink.trim(),
     entryDate: values.entryDate,
     status: values.status,

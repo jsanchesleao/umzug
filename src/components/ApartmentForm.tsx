@@ -58,16 +58,29 @@ function ApartmentForm({ initialValues, submitLabel, onSubmit, onCancel }: Apart
       </div>
 
       <div className="form-field">
-        <label htmlFor="rentCost">Rent cost *</label>
+        <label htmlFor="coldRent">Cold rent</label>
         <input
-          id="rentCost"
+          id="coldRent"
           type="number"
           min="0"
           step="0.01"
-          value={values.rentCost}
-          onChange={(e) => update("rentCost", e.target.value)}
+          value={values.coldRent}
+          onChange={(e) => update("coldRent", e.target.value)}
         />
-        {errors.rentCost && <span className="field-error">{errors.rentCost}</span>}
+        {errors.coldRent && <span className="field-error">{errors.coldRent}</span>}
+      </div>
+
+      <div className="form-field">
+        <label htmlFor="warmRent">Warm rent</label>
+        <input
+          id="warmRent"
+          type="number"
+          min="0"
+          step="0.01"
+          value={values.warmRent}
+          onChange={(e) => update("warmRent", e.target.value)}
+        />
+        {errors.warmRent && <span className="field-error">{errors.warmRent}</span>}
       </div>
 
       <div className="form-field">

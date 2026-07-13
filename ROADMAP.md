@@ -78,9 +78,9 @@ At this point the core CRUD app is functionally complete end-to-end (create an a
 
 Resolved per SPEC §8.6: photos are in scope for v1, not deferred. Kept as its own milestone since it's independent of all other entities — no other entity depends on it — but it is no longer optional/descope-safe.
 
-- [ ] Photo upload with downscale/compress before storage (~1600px longest edge, JPEG/WebP ~0.8 quality).
-- [ ] Photos gallery on the case file.
-- [ ] "Include photos" checkbox on export (default off for bulk, on for single-apartment), base64 data-URL embedding.
+- [x] Photo upload with downscale/compress before storage (~1600px longest edge, JPEG/WebP ~0.8 quality).
+- [x] Photos gallery on the case file.
+- [x] "Include photos" checkbox on export (default off for bulk, on for single-apartment), base64 data-URL embedding.
 
 ## Deferred / Out of Scope (per §7)
 
