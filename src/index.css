@@ -592,7 +592,7 @@ button {
   color: var(--color-primary);
 }
 
-@media (max-width: 768px) {
+@media (max-width: 899px) {
   .kanban-tabs {
     display: flex;
   }
@@ -1467,7 +1467,7 @@ button {
   white-space: nowrap;
 }
 
-@media (max-width: 768px) {
+@media (max-width: 899px) {
   .filter-toggle-btn {
     display: inline-block;
     margin-bottom: 0.5rem;
