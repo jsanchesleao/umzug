@@ -1,12 +1,16 @@
-import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
-import type { ApartmentStatus } from "../types";
-
-interface StatusFilterMenuProps {
-  statusFilter: ApartmentStatus[];
-  onToggle: (status: ApartmentStatus, checked: boolean) => void;
+interface StatusFilterMenuProps<T extends string> {
+  statuses: T[];
+  labels: Record<T, string>;
+  statusFilter: T[];
+  onToggle: (status: T, checked: boolean) => void;
 }
 
-function StatusFilterMenu({ statusFilter, onToggle }: StatusFilterMenuProps) {
+function StatusFilterMenu<T extends string>({
+  statuses,
+  labels,
+  statusFilter,
+  onToggle,
+}: StatusFilterMenuProps<T>) {
   const label = statusFilter.length === 0 ? "All" : String(statusFilter.length);
 
   return (
@@ -18,14 +22,14 @@ function StatusFilterMenu({ statusFilter, onToggle }: StatusFilterMenuProps) {
         Status: {label}
       </summary>
       <div className="status-menu-list column-visibility-list">
-        {APARTMENT_STATUSES.map((status) => (
+        {statuses.map((status) => (
           <label key={status} className="case-file-menu-checkbox">
             <input
               type="checkbox"
               checked={statusFilter.length === 0 || statusFilter.includes(status)}
               onChange={(e) => onToggle(status, e.target.checked)}
             />
-            {APARTMENT_STATUS_LABELS[status]}
+            {labels[status]}
           </label>
         ))}
       </div>

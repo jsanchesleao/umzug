@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { Apartment, ApartmentStatus } from "../types";
 import StatusBadge from "./StatusBadge";
 import StatusMenu from "./StatusMenu";
@@ -37,7 +38,7 @@ function ApartmentListView({ apartments, unresolvedCounts, onStatusChange }: Apa
             {apartment.address && <span className="apartment-row-address">{apartment.address}</span>}
           </div>
 
-          <StatusBadge status={apartment.status} />
+          <StatusBadge status={apartment.status} label={APARTMENT_STATUS_LABELS[apartment.status]} />
 
           <span className="apartment-row-rent">{formatRent(apartment.coldRent, settings.currency)}</span>
 
@@ -45,6 +46,8 @@ function ApartmentListView({ apartments, unresolvedCounts, onStatusChange }: Apa
 
           <StatusMenu
             currentStatus={apartment.status}
+            statuses={APARTMENT_STATUSES}
+            labels={APARTMENT_STATUS_LABELS}
             onSelect={(status) => onStatusChange(apartment, status)}
           />
         </article>

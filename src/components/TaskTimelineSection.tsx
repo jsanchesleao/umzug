@@ -1,26 +1,23 @@
 import { useState } from "react";
 import { useLiveQuery } from "dexie-react-hooks";
-import { listTimelineEventsForApartment } from "../data/timelineEvents";
-import TimelineEventItem from "./TimelineEventItem";
-import TimelineEventModal from "./TimelineEventModal";
+import { listTaskEventsForTask } from "../data/taskEvents";
+import TaskEventItem from "./TaskEventItem";
+import TaskEventModal from "./TaskEventModal";
 import CollapsibleSection from "./CollapsibleSection";
 
-interface TimelineSectionProps {
-  apartmentId: string;
+interface TaskTimelineSectionProps {
+  taskId: string;
 }
 
-function TimelineSection({ apartmentId }: TimelineSectionProps) {
+function TaskTimelineSection({ taskId }: TaskTimelineSectionProps) {
   const [adding, setAdding] = useState(false);
-  const events = useLiveQuery(
-    () => listTimelineEventsForApartment(apartmentId),
-    [apartmentId],
-  );
+  const events = useLiveQuery(() => listTaskEventsForTask(taskId), [taskId]);
 
   return (
     <>
       <CollapsibleSection
         className="case-file-timeline"
-        entityId={apartmentId}
+        entityId={taskId}
         cardKey="timeline"
         title="Timeline"
         headerExtra={
@@ -30,14 +27,14 @@ function TimelineSection({ apartmentId }: TimelineSectionProps) {
         }
       >
         {(events ?? []).map((event) => (
-          <TimelineEventItem key={event.id} event={event} />
+          <TaskEventItem key={event.id} event={event} />
         ))}
         {events && events.length === 0 && <p className="empty-column">No events yet.</p>}
       </CollapsibleSection>
 
-      {adding && <TimelineEventModal apartmentId={apartmentId} onClose={() => setAdding(false)} />}
+      {adding && <TaskEventModal taskId={taskId} onClose={() => setAdding(false)} />}
     </>
   );
 }
 
-export default TimelineSection;
+export default TaskTimelineSection;

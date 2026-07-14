@@ -3,10 +3,13 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard.tsx";
 import Apartments from "./pages/Apartments.tsx";
 import ApartmentDetail from "./pages/ApartmentDetail.tsx";
+import Tasks from "./pages/Tasks.tsx";
+import TaskDetail from "./pages/TaskDetail.tsx";
 import Documents from "./pages/Documents.tsx";
 import OptionsModal from "./components/OptionsModal.tsx";
 import AppHeader from "./components/AppHeader.tsx";
 import ImportExportBar from "./components/ImportExportBar.tsx";
+import TasksImportExportBar from "./components/TasksImportExportBar.tsx";
 import DocumentsMenuBar from "./components/DocumentsMenuBar.tsx";
 import { VaultProvider } from "./documents/VaultProvider.tsx";
 
@@ -17,6 +20,8 @@ function AppShell() {
   const menu =
     location.pathname === "/apartments" ? (
       <ImportExportBar />
+    ) : location.pathname === "/tasks" ? (
+      <TasksImportExportBar />
     ) : location.pathname === "/documents" ? (
       <DocumentsMenuBar />
     ) : null;
@@ -29,6 +34,8 @@ function AppShell() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/apartments" element={<Apartments />} />
         <Route path="/apartments/:id" element={<ApartmentDetail />} />
+        <Route path="/tasks" element={<Tasks />} />
+        <Route path="/tasks/:id" element={<TaskDetail />} />
         <Route path="/documents" element={<Documents />} />
       </Routes>
 

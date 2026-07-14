@@ -70,6 +70,48 @@ export interface Action {
   updatedAt: string;
 }
 
+export type TaskStatus = "ToDo" | "InProgress" | "Finished" | "Cancelled";
+
+export const TASK_STATUSES: TaskStatus[] = ["ToDo", "InProgress", "Finished", "Cancelled"];
+
+export const TASK_STATUS_LABELS: Record<TaskStatus, string> = {
+  ToDo: "To Do",
+  InProgress: "In Progress",
+  Finished: "Finished",
+  Cancelled: "Cancelled",
+};
+
+export interface Task {
+  id: string;
+  title: string;
+  description: string;
+  status: TaskStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskEvent {
+  id: string;
+  taskId: string;
+  date: string;
+  shortDescription: string;
+  longDescription: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TaskAction {
+  id: string;
+  taskId: string;
+  eventId: string | null;
+  description: string;
+  dueDate: string;
+  urgency: ActionUrgency;
+  status: ActionStatus;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Photo {
   id: string;
   apartmentId: string;
@@ -124,6 +166,7 @@ export interface AppSettings {
   dateFormat: DateFormatOption;
   sketchIgnoreTouch: boolean;
   hiddenKanbanColumns: ApartmentStatus[];
+  hiddenTaskKanbanColumns: TaskStatus[];
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -132,4 +175,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   dateFormat: "DMY",
   sketchIgnoreTouch: false,
   hiddenKanbanColumns: [],
+  hiddenTaskKanbanColumns: [],
 };

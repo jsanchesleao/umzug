@@ -1,12 +1,10 @@
-import { APARTMENT_STATUS_LABELS } from "../types";
-import type { ApartmentStatus } from "../types";
-
 interface StatusBadgeProps {
-  status: ApartmentStatus;
+  status: string;
+  label: string;
 }
 
-function StatusBadge({ status }: StatusBadgeProps) {
-  return <span className={`status-badge status-${status}`}>{APARTMENT_STATUS_LABELS[status]}</span>;
+function StatusBadge({ status, label }: StatusBadgeProps) {
+  return <span className={`status-badge status-${status}`}>{label}</span>;
 }
 
 export default StatusBadge;

@@ -16,7 +16,7 @@ function SketchSection({ apartmentId }: SketchSectionProps) {
   return (
     <CollapsibleSection
       className="case-file-sketches"
-      apartmentId={apartmentId}
+      entityId={apartmentId}
       cardKey="sketches"
       title="Sketches"
       headerExtra={

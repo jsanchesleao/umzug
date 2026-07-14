@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
+import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { Apartment, ApartmentStatus } from "../types";
 import { countUnresolvedActionsForApartment } from "../data/actions";
 import { formatRent } from "../utils/rent";
@@ -39,6 +40,8 @@ function ApartmentCard({ apartment, onStatusChange }: ApartmentCardProps) {
         </div>
         <StatusMenu
           currentStatus={apartment.status}
+          statuses={APARTMENT_STATUSES}
+          labels={APARTMENT_STATUS_LABELS}
           onSelect={(status) => onStatusChange(apartment, status)}
         />
       </div>

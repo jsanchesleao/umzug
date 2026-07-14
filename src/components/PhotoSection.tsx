@@ -37,7 +37,7 @@ function PhotoSection({ apartmentId }: PhotoSectionProps) {
   return (
     <CollapsibleSection
       className="case-file-photos"
-      apartmentId={apartmentId}
+      entityId={apartmentId}
       cardKey="photos"
       title="Photos"
       headerExtra={

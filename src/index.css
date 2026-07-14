@@ -31,6 +31,9 @@
   --status-awaitingresponse: #c99a3c;
   --status-confirmed: #6fae7a;
   --status-cancelled: #7a6b5c;
+  --status-todo: #6d7a8a;
+  --status-inprogress: #4f9e93;
+  --status-finished: #6fae7a;
 
   --radius: 4px;
   --radius-sm: 2px;
@@ -74,6 +77,9 @@
   --status-awaitingresponse: #96700f;
   --status-confirmed: #4a8f57;
   --status-cancelled: #6b5c4a;
+  --status-todo: #4f5f70;
+  --status-inprogress: #2f7a6f;
+  --status-finished: #4a8f57;
 }
 
 * {
@@ -332,6 +338,18 @@ button {
 
 .kanban-column[data-status="Cancelled"]::before {
   background: var(--status-cancelled);
+}
+
+.kanban-column[data-status="ToDo"]::before {
+  background: var(--status-todo);
+}
+
+.kanban-column[data-status="InProgress"]::before {
+  background: var(--status-inprogress);
+}
+
+.kanban-column[data-status="Finished"]::before {
+  background: var(--status-finished);
 }
 
 .kanban-column h2 {
@@ -1085,6 +1103,24 @@ button {
   background: color-mix(in srgb, var(--status-cancelled) 25%, transparent);
   border-color: var(--status-cancelled);
   color: var(--status-cancelled);
+}
+
+.status-ToDo {
+  background: color-mix(in srgb, var(--status-todo) 25%, transparent);
+  border-color: var(--status-todo);
+  color: var(--status-todo);
+}
+
+.status-InProgress {
+  background: color-mix(in srgb, var(--status-inprogress) 25%, transparent);
+  border-color: var(--status-inprogress);
+  color: var(--status-inprogress);
+}
+
+.status-Finished {
+  background: color-mix(in srgb, var(--status-finished) 25%, transparent);
+  border-color: var(--status-finished);
+  color: var(--status-finished);
 }
 
 .btn-sm {

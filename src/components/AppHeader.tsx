@@ -30,6 +30,12 @@ function AppHeader({ onOpenSettings, menu }: AppHeaderProps) {
           Apartments
         </NavLink>
         <NavLink
+          to="/tasks"
+          className={({ isActive }) => (isActive ? "app-header-nav-link active" : "app-header-nav-link")}
+        >
+          Tasks
+        </NavLink>
+        <NavLink
           to="/documents"
           className={({ isActive }) => (isActive ? "app-header-nav-link active" : "app-header-nav-link")}
         >

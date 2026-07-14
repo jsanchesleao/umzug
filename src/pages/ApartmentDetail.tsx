@@ -19,6 +19,7 @@ import CollapsibleSection from "../components/CollapsibleSection";
 import { formatRent } from "../utils/rent";
 import { formatDate, formatDateTime } from "../utils/date";
 import { useSettings } from "../settings/useSettings";
+import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { ApartmentStatus } from "../types";
 
 function ApartmentDetail() {
@@ -98,8 +99,13 @@ function ApartmentDetail() {
             <div className="case-file-title-row">
               <div className="case-file-title-group">
                 <h1 className="case-file-title-group-heading">{apartment.title}</h1>
-                <StatusBadge status={apartment.status} />
-                <StatusMenu currentStatus={apartment.status} onSelect={setStatusChangeTarget} />
+                <StatusBadge status={apartment.status} label={APARTMENT_STATUS_LABELS[apartment.status]} />
+                <StatusMenu
+                  currentStatus={apartment.status}
+                  statuses={APARTMENT_STATUSES}
+                  labels={APARTMENT_STATUS_LABELS}
+                  onSelect={setStatusChangeTarget}
+                />
               </div>
 
               <details className="status-menu" ref={menuRef}>
@@ -185,7 +191,7 @@ function ApartmentDetail() {
 
           <CollapsibleSection
             className="case-file-notes"
-            apartmentId={apartment.id}
+            entityId={apartment.id}
             cardKey="notes"
             title="Notes"
           >
@@ -216,7 +222,7 @@ function ApartmentDetail() {
 
           <CollapsibleSection
             className="case-file-actions-section"
-            apartmentId={apartment.id}
+            entityId={apartment.id}
             cardKey="actions"
             title="Actions"
           >

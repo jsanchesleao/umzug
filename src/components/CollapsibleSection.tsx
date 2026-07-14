@@ -2,8 +2,8 @@ import { useId, useState, type ReactNode } from "react";
 
 interface CollapsibleSectionProps {
   className: string;
-  apartmentId: string;
-  cardKey: "notes" | "timeline" | "photos" | "actions" | "sketches";
+  entityId: string;
+  cardKey: string;
   title: string;
   headerExtra?: ReactNode;
   children: ReactNode;
@@ -11,13 +11,13 @@ interface CollapsibleSectionProps {
 
 function CollapsibleSection({
   className,
-  apartmentId,
+  entityId,
   cardKey,
   title,
   headerExtra,
   children,
 }: CollapsibleSectionProps) {
-  const storageKey = `umzug:collapse:${apartmentId}:${cardKey}`;
+  const storageKey = `umzug:collapse:${entityId}:${cardKey}`;
   const [collapsed, setCollapsed] = useState(() => sessionStorage.getItem(storageKey) === "1");
 
   // Re-derive collapsed state during render if the storage key identity changes

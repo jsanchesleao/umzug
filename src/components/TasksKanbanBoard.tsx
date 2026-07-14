@@ -1,49 +1,49 @@
 import { useState } from "react";
 import type { DragEvent } from "react";
-import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
-import type { Apartment, ApartmentStatus } from "../types";
-import ApartmentCard from "./ApartmentCard";
+import { TASK_STATUSES, TASK_STATUS_LABELS } from "../types";
+import type { Task, TaskStatus } from "../types";
+import TaskCard from "./TaskCard";
 import ColumnVisibilityMenu from "./ColumnVisibilityMenu";
 import { useSettings } from "../settings/useSettings";
 
-interface KanbanBoardProps {
-  apartments: Apartment[];
-  onStatusChange: (apartment: Apartment, newStatus: ApartmentStatus) => void;
+interface TasksKanbanBoardProps {
+  tasks: Task[];
+  onStatusChange: (task: Task, newStatus: TaskStatus) => void;
 }
 
-function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
+function TasksKanbanBoard({ tasks, onStatusChange }: TasksKanbanBoardProps) {
   const { settings, updateSettings } = useSettings();
-  const visibleStatuses = APARTMENT_STATUSES.filter(
-    (status) => !settings.hiddenKanbanColumns.includes(status),
+  const visibleStatuses = TASK_STATUSES.filter(
+    (status) => !settings.hiddenTaskKanbanColumns.includes(status),
   );
 
-  const [selectedStatus, setSelectedStatus] = useState<ApartmentStatus>(
-    visibleStatuses[0] ?? "AwaitingVisitation",
+  const [selectedStatus, setSelectedStatus] = useState<TaskStatus>(
+    visibleStatuses[0] ?? "ToDo",
   );
-  const [dragOverStatus, setDragOverStatus] = useState<ApartmentStatus | null>(null);
+  const [dragOverStatus, setDragOverStatus] = useState<TaskStatus | null>(null);
 
   const activeStatus = visibleStatuses.includes(selectedStatus)
     ? selectedStatus
     : (visibleStatuses[0] ?? selectedStatus);
 
-  const byStatus = (status: ApartmentStatus) => apartments.filter((a) => a.status === status);
+  const byStatus = (status: TaskStatus) => tasks.filter((t) => t.status === status);
 
-  function handleDrop(event: DragEvent, status: ApartmentStatus) {
+  function handleDrop(event: DragEvent, status: TaskStatus) {
     event.preventDefault();
     setDragOverStatus(null);
-    const apartmentId = event.dataTransfer.getData("text/plain");
-    const apartment = apartments.find((a) => a.id === apartmentId);
-    if (apartment) onStatusChange(apartment, status);
+    const taskId = event.dataTransfer.getData("text/plain");
+    const task = tasks.find((t) => t.id === taskId);
+    if (task) onStatusChange(task, status);
   }
 
   return (
     <div>
       <div className="kanban-toolbar">
         <ColumnVisibilityMenu
-          statuses={APARTMENT_STATUSES}
-          labels={APARTMENT_STATUS_LABELS}
-          hidden={settings.hiddenKanbanColumns}
-          onChange={(hiddenKanbanColumns) => updateSettings({ hiddenKanbanColumns })}
+          statuses={TASK_STATUSES}
+          labels={TASK_STATUS_LABELS}
+          hidden={settings.hiddenTaskKanbanColumns}
+          onChange={(hiddenTaskKanbanColumns) => updateSettings({ hiddenTaskKanbanColumns })}
         />
       </div>
 
@@ -59,14 +59,14 @@ function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
                 className={status === activeStatus ? "kanban-tab active" : "kanban-tab"}
                 onClick={() => setSelectedStatus(status)}
               >
-                {APARTMENT_STATUS_LABELS[status]} ({byStatus(status).length})
+                {TASK_STATUS_LABELS[status]} ({byStatus(status).length})
               </button>
             ))}
           </div>
 
           <div className="kanban-board">
             {visibleStatuses.map((status) => {
-              const columnApartments = byStatus(status);
+              const columnTasks = byStatus(status);
               return (
                 <div
                   key={status}
@@ -82,20 +82,14 @@ function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
                   onDrop={(e) => handleDrop(e, status)}
                 >
                   <h2>
-                    {APARTMENT_STATUS_LABELS[status]}{" "}
-                    <span className="column-count">{columnApartments.length}</span>
+                    {TASK_STATUS_LABELS[status]}{" "}
+                    <span className="column-count">{columnTasks.length}</span>
                   </h2>
                   <div className="kanban-column-cards">
-                    {columnApartments.map((apartment) => (
-                      <ApartmentCard
-                        key={apartment.id}
-                        apartment={apartment}
-                        onStatusChange={onStatusChange}
-                      />
+                    {columnTasks.map((task) => (
+                      <TaskCard key={task.id} task={task} onStatusChange={onStatusChange} />
                     ))}
-                    {columnApartments.length === 0 && (
-                      <p className="empty-column">No apartments</p>
-                    )}
+                    {columnTasks.length === 0 && <p className="empty-column">No tasks</p>}
                   </div>
                 </div>
               );
@@ -107,4 +101,4 @@ function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
   );
 }
 
-export default KanbanBoard;
+export default TasksKanbanBoard;

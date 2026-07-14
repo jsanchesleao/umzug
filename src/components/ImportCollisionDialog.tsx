@@ -3,17 +3,23 @@ import type { CollisionResolution } from "../data/importExport";
 
 interface ImportCollisionDialogProps {
   count: number;
+  entityLabel?: string;
   onResolve: (resolution: CollisionResolution) => void;
   onCancel: () => void;
 }
 
-function ImportCollisionDialog({ count, onResolve, onCancel }: ImportCollisionDialogProps) {
+function ImportCollisionDialog({
+  count,
+  entityLabel = "apartment",
+  onResolve,
+  onCancel,
+}: ImportCollisionDialogProps) {
   return (
-    <Modal title="Apartment already exists" onClose={onCancel}>
+    <Modal title={`${entityLabel[0].toUpperCase()}${entityLabel.slice(1)} already exists`} onClose={onCancel}>
       <p>
         {count === 1
-          ? "1 apartment in this file already exists in your data."
-          : `${count} apartments in this file already exist in your data.`}{" "}
+          ? `1 ${entityLabel} in this file already exists in your data.`
+          : `${count} ${entityLabel}s in this file already exist in your data.`}{" "}
         How should they be imported?
       </p>
       <div className="modal-actions">

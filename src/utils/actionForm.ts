@@ -1,4 +1,4 @@
-import { ACTION_URGENCIES, ACTION_STATUSES, type Action, type ActionStatus, type ActionUrgency } from "../types";
+import { ACTION_URGENCIES, ACTION_STATUSES, type ActionStatus, type ActionUrgency } from "../types";
 import { todayISODate } from "./date";
 
 export interface ActionFormValues {
@@ -19,7 +19,12 @@ export function emptyActionFormValues(): ActionFormValues {
   };
 }
 
-export function actionToFormValues(action: Action): ActionFormValues {
+export function actionToFormValues(action: {
+  description: string;
+  dueDate: string;
+  urgency: ActionUrgency;
+  status: ActionStatus;
+}): ActionFormValues {
   return {
     description: action.description,
     dueDate: action.dueDate,

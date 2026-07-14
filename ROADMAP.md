@@ -87,6 +87,16 @@ Resolved per SPEC §8.6: photos are in scope for v1, not deferred. Kept as its o
 - [x] Peer-to-peer transfer between devices (§4.6a): PeerJS/WebRTC data channel paired via QR code (or a manual code/link fallback), reusing the §4.6 export/import schema and pipeline unchanged.
 - [x] Encrypted documents vault (§4.8): password-gated `/documents` page; PBKDF2 → AES-GCM crypto with per-document keys; OPFS storage with an encrypted virtual-folder index; upload/view/download/rename/move/delete; multi-select zip download; P2P document transfer (chunked, with progress and receiver-chosen destination folder); change-password and double-confirmed vault reset.
 
+## Milestone 10 — Tasks (§4.9)
+
+A second, independent case-file entity (title, description, timeline, actions) with its own `ToDo`/`InProgress`/`Finished`/`Cancelled` workflow, mirroring the Apartment/TimelineEvent/Action architecture with its own Dexie tables.
+
+- [x] `Task`/`TaskEvent`/`TaskAction` types, Dexie schema (new tables, no migration of existing stores), and a data-access layer mirroring `apartments.ts`/`timelineEvents.ts`/`actions.ts`.
+- [x] Tasks page (`/tasks`): search/filter/sort, List/Kanban toggle, FAB — direct status commit (no extra fields needed on any `TaskStatus` transition, unlike apartments' `VisitScheduled`).
+- [x] Task Detail page (`/tasks/:id`): header, editable description, timeline section, action list, edit/export/send/delete menu.
+- [x] Dashboard: unresolved `TaskAction`s merged into the same sorted Unresolved Actions panel as apartment actions (one list, not two).
+- [x] Independent Tasks import/export pipeline (`ExportedTask` schema) and P2P transfer on its own pairing channel (`umzugtask-` prefix, `?p2ptask=` param) so it can't cross-connect with the apartments or documents channels.
+
 ## Deferred / Out of Scope (per §7)
 
 - Multi-user / sync / cloud backup.

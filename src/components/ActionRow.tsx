@@ -1,18 +1,27 @@
 import { Link } from "react-router-dom";
 import { ACTION_STATUSES } from "../types";
-import type { Action, ActionStatus } from "../types";
+import type { ActionStatus, ActionUrgency } from "../types";
 import { formatDate, isOverdue } from "../utils/date";
 import { useSettings } from "../settings/useSettings";
 
+interface ActionLike {
+  id: string;
+  description: string;
+  dueDate: string;
+  urgency: ActionUrgency;
+  status: ActionStatus;
+}
+
 interface ActionRowProps {
-  action: Action;
-  apartmentTitle?: string;
+  action: ActionLike;
+  entityTitle?: string;
+  entityHref?: string;
   onStatusChange: (status: ActionStatus) => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }
 
-function ActionRow({ action, apartmentTitle, onStatusChange, onEdit, onDelete }: ActionRowProps) {
+function ActionRow({ action, entityTitle, entityHref, onStatusChange, onEdit, onDelete }: ActionRowProps) {
   const { settings } = useSettings();
   const overdue = action.status === "Unresolved" && isOverdue(action.dueDate);
 
@@ -26,9 +35,9 @@ function ActionRow({ action, apartmentTitle, onStatusChange, onEdit, onDelete }:
       </div>
 
       <div className="action-row-meta">
-        {apartmentTitle && (
-          <Link to={`/apartments/${action.apartmentId}`} className="action-row-apartment">
-            {apartmentTitle}
+        {entityTitle && entityHref && (
+          <Link to={entityHref} className="action-row-apartment">
+            {entityTitle}
           </Link>
         )}
         <span className={overdue ? "action-row-due overdue" : "action-row-due"}>

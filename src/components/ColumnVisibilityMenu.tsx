@@ -1,19 +1,23 @@
-import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
-import type { ApartmentStatus } from "../types";
-
-interface ColumnVisibilityMenuProps {
-  hidden: ApartmentStatus[];
-  onChange: (hidden: ApartmentStatus[]) => void;
+interface ColumnVisibilityMenuProps<T extends string> {
+  statuses: T[];
+  labels: Record<T, string>;
+  hidden: T[];
+  onChange: (hidden: T[]) => void;
 }
 
-function ColumnVisibilityMenu({ hidden, onChange }: ColumnVisibilityMenuProps) {
+function ColumnVisibilityMenu<T extends string>({
+  statuses,
+  labels,
+  hidden,
+  onChange,
+}: ColumnVisibilityMenuProps<T>) {
   return (
     <details className="status-menu">
       <summary className="status-menu-trigger" aria-label="Show or hide columns">
         ☷
       </summary>
       <div className="status-menu-list column-visibility-list">
-        {APARTMENT_STATUSES.map((status) => (
+        {statuses.map((status) => (
           <label key={status} className="case-file-menu-checkbox">
             <input
               type="checkbox"
@@ -24,7 +28,7 @@ function ColumnVisibilityMenu({ hidden, onChange }: ColumnVisibilityMenuProps) {
                 );
               }}
             />
-            {APARTMENT_STATUS_LABELS[status]}
+            {labels[status]}
           </label>
         ))}
       </div>

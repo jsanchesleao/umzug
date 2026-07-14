@@ -1,23 +1,23 @@
 import { useState } from "react";
-import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
-import type { ApartmentStatus } from "../types";
+import { TASK_STATUSES, TASK_STATUS_LABELS } from "../types";
+import type { TaskStatus } from "../types";
 import StatusFilterMenu from "./StatusFilterMenu";
-import { APARTMENT_SORT_OPTIONS, APARTMENT_SORT_LABELS } from "../utils/apartmentSort";
-import type { ApartmentSortOption } from "../utils/apartmentSort";
+import { TASK_SORT_OPTIONS, TASK_SORT_LABELS } from "../utils/taskSort";
+import type { TaskSortOption } from "../utils/taskSort";
 
-interface FilterBarProps {
+interface TaskFilterBarProps {
   search: string;
   onSearchChange: (value: string) => void;
   onlyUnresolved: boolean;
   onOnlyUnresolvedChange: (value: boolean) => void;
-  statusFilter: ApartmentStatus[];
-  onStatusFilterChange: (statuses: ApartmentStatus[]) => void;
-  sortBy: ApartmentSortOption;
-  onSortByChange: (value: ApartmentSortOption) => void;
+  statusFilter: TaskStatus[];
+  onStatusFilterChange: (statuses: TaskStatus[]) => void;
+  sortBy: TaskSortOption;
+  onSortByChange: (value: TaskSortOption) => void;
   showStatusAndSort: boolean;
 }
 
-function FilterBar({
+function TaskFilterBar({
   search,
   onSearchChange,
   onlyUnresolved,
@@ -27,14 +27,14 @@ function FilterBar({
   sortBy,
   onSortByChange,
   showStatusAndSort,
-}: FilterBarProps) {
+}: TaskFilterBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  function handleStatusToggle(status: ApartmentStatus, checked: boolean) {
+  function handleStatusToggle(status: TaskStatus, checked: boolean) {
     // An empty filter means "all statuses", so expand it before toggling one off.
-    const base = statusFilter.length === 0 ? [...APARTMENT_STATUSES] : statusFilter;
+    const base = statusFilter.length === 0 ? [...TASK_STATUSES] : statusFilter;
     const next = checked ? [...base, status] : base.filter((s) => s !== status);
-    onStatusFilterChange(next.length === APARTMENT_STATUSES.length ? [] : next);
+    onStatusFilterChange(next.length === TASK_STATUSES.length ? [] : next);
   }
 
   return (
@@ -53,8 +53,8 @@ function FilterBar({
         <input
           type="search"
           className="filter-search"
-          placeholder="Search address or notes…"
-          aria-label="Search apartments"
+          placeholder="Search title or description…"
+          aria-label="Search tasks"
           value={search}
           onChange={(e) => onSearchChange(e.target.value)}
         />
@@ -71,21 +71,21 @@ function FilterBar({
         {showStatusAndSort && (
           <>
             <StatusFilterMenu
-              statuses={APARTMENT_STATUSES}
-              labels={APARTMENT_STATUS_LABELS}
+              statuses={TASK_STATUSES}
+              labels={TASK_STATUS_LABELS}
               statusFilter={statusFilter}
               onToggle={handleStatusToggle}
             />
 
             <div className="form-field filter-sort">
               <select
-                id="apartments-sort"
+                id="tasks-sort"
                 value={sortBy}
-                onChange={(e) => onSortByChange(e.target.value as ApartmentSortOption)}
+                onChange={(e) => onSortByChange(e.target.value as TaskSortOption)}
               >
-                {APARTMENT_SORT_OPTIONS.map((option) => (
+                {TASK_SORT_OPTIONS.map((option) => (
                   <option key={option} value={option}>
-                    {APARTMENT_SORT_LABELS[option]}
+                    {TASK_SORT_LABELS[option]}
                   </option>
                 ))}
               </select>
@@ -97,4 +97,4 @@ function FilterBar({
   );
 }
 
-export default FilterBar;
+export default TaskFilterBar;

@@ -1,16 +1,26 @@
-import { useEffect, useMemo, useState } from "react";
-import { updateAction } from "../data/actions";
-import type { Action, ActionStatus, Apartment } from "../types";
+import { useEffect, useState } from "react";
+import type { ActionStatus, ActionUrgency } from "../types";
 import ActionRow from "./ActionRow";
 
+export interface UnresolvedEntry {
+  kind: "apartment" | "task";
+  id: string;
+  description: string;
+  dueDate: string;
+  urgency: ActionUrgency;
+  status: ActionStatus;
+  entityTitle: string;
+  entityHref: string;
+}
+
 interface UnresolvedActionsPanelProps {
-  actions: Action[];
-  apartments: Apartment[];
+  entries: UnresolvedEntry[];
+  onStatusChange: (entry: UnresolvedEntry, status: ActionStatus) => void;
 }
 
 const COLLAPSE_STORAGE_KEY = "umzug:unresolvedPanelCollapsed";
 
-function UnresolvedActionsPanel({ actions, apartments }: UnresolvedActionsPanelProps) {
+function UnresolvedActionsPanel({ entries, onStatusChange }: UnresolvedActionsPanelProps) {
   const [collapsed, setCollapsed] = useState(
     () => sessionStorage.getItem(COLLAPSE_STORAGE_KEY) === "1",
   );
@@ -18,12 +28,6 @@ function UnresolvedActionsPanel({ actions, apartments }: UnresolvedActionsPanelP
   useEffect(() => {
     sessionStorage.setItem(COLLAPSE_STORAGE_KEY, collapsed ? "1" : "0");
   }, [collapsed]);
-
-  const titleById = useMemo(() => new Map(apartments.map((a) => [a.id, a.title])), [apartments]);
-
-  async function handleStatusChange(actionId: string, status: ActionStatus) {
-    await updateAction(actionId, { status });
-  }
 
   return (
     <section className="unresolved-panel">
@@ -33,19 +37,20 @@ function UnresolvedActionsPanel({ actions, apartments }: UnresolvedActionsPanelP
         onClick={() => setCollapsed((c) => !c)}
         aria-expanded={!collapsed}
       >
-        <span>Unresolved Actions ({actions.length})</span>
+        <span>Unresolved Actions ({entries.length})</span>
         <span className="unresolved-panel-caret">{collapsed ? "▸" : "▾"}</span>
       </button>
 
       {!collapsed && (
         <div className="unresolved-panel-body">
-          {actions.length === 0 && <p className="empty-column">No unresolved actions.</p>}
-          {actions.map((action) => (
+          {entries.length === 0 && <p className="empty-column">No unresolved actions.</p>}
+          {entries.map((entry) => (
             <ActionRow
-              key={action.id}
-              action={action}
-              apartmentTitle={titleById.get(action.apartmentId)}
-              onStatusChange={(status) => handleStatusChange(action.id, status)}
+              key={`${entry.kind}-${entry.id}`}
+              action={entry}
+              entityTitle={entry.entityTitle}
+              entityHref={entry.entityHref}
+              onStatusChange={(status) => onStatusChange(entry, status)}
             />
           ))}
         </div>

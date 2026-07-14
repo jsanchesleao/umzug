@@ -9,7 +9,7 @@ Umzug is a client-only Progressive Web App for tracking apartments during a rent
 ## 2. Tech Stack & Architecture
 
 - **Framework:** React + TypeScript, built with Vite.
-- **Routing:** client-side router (e.g. `react-router`), two top-level routes: Dashboard (`/`) and Apartment Detail (`/apartments/:id`).
+- **Routing:** client-side router (e.g. `react-router`), top-level routes: Dashboard (`/`), Apartments (`/apartments`), Apartment Detail (`/apartments/:id`), Tasks (`/tasks`), Task Detail (`/tasks/:id`), and Documents (`/documents`).
 - **Persistence:** IndexedDB, accessed through a wrapper (e.g. `Dexie.js`) rather than the raw API — needed for schema versioning/migrations as the app evolves.
 - **PWA:** `vite-plugin-pwa` (or equivalent) for manifest + service worker generation, precaching the app shell for full offline use after first load.
 - **Deployment:** static build published to GitHub Pages. Vite `base` config must match the repo's Pages path; all internal routing/asset references must work under that subpath.
@@ -33,6 +33,8 @@ type ApartmentStatus =
 type ActionUrgency = "Low" | "Medium" | "High" | "Critical"; // see §8, open question
 
 type ActionStatus = "Unresolved" | "Resolved" | "Cancelled";
+
+type TaskStatus = "ToDo" | "InProgress" | "Finished" | "Cancelled";
 ```
 
 ### 3.2 Entities
@@ -84,9 +86,22 @@ type ActionStatus = "Unresolved" | "Resolved" | "Cancelled";
 | `caption` | string \| null | optional |
 | `createdAt` | ISO datetime | system-managed |
 
+**Task** — a standalone case file for generic to-dos, independent of any apartment
+| Field | Type | Notes |
+|---|---|---|
+| `id` | string (UUID) | |
+| `title` | string | required |
+| `description` | string | free text, optional |
+| `status` | `TaskStatus` | required; defaults to `ToDo` |
+| `createdAt` / `updatedAt` | ISO datetime | system-managed |
+
+**TaskEvent** (belongs to one Task) — same shape as `TimelineEvent`, keyed by `taskId` instead of `apartmentId`.
+
+**TaskAction** (belongs to one Task, and optionally to one TaskEvent within it) — same shape as `Action` (reuses `ActionUrgency`/`ActionStatus`), keyed by `taskId` instead of `apartmentId`.
+
 ### 3.3 Storage schema
 
-Store as four separate IndexedDB object stores (`apartments`, `timelineEvents`, `actions`, `photos`), each keyed by `id`, with indexes on the foreign keys (`apartmentId`, and `eventId` on `actions`). Rationale: the dashboard needs "all unresolved actions across every apartment, sorted by urgency then due date" — a normalized `actions` store lets this run as a single indexed query instead of loading and flattening every apartment document.
+Store as separate IndexedDB object stores (`apartments`, `timelineEvents`, `actions`, `photos`, `tasks`, `taskEvents`, `taskActions`), each keyed by `id`, with indexes on the foreign keys (`apartmentId`/`taskId`, and `eventId` on `actions`/`taskActions`). Rationale: the dashboard needs "all unresolved actions across every apartment, sorted by urgency then due date" — a normalized `actions` store lets this run as a single indexed query instead of loading and flattening every apartment document. Tasks mirror this exact rationale with their own parallel stores rather than sharing the apartment tables, so cascading deletes and unresolved-action queries stay independent per entity type; the dashboard combines both `status`-indexed queries and re-sorts the merged result.
 
 Documents (§4.8) deliberately live **outside** IndexedDB, in the browser's Origin Private File System under `umzug-docs/`: `vault.json` (plaintext KDF metadata), `index.enc` (the encrypted index), and `blobs/<uuid>` (encrypted document bytes in one flat directory). They reference and are referenced by nothing in the Dexie stores.
 
@@ -97,9 +112,9 @@ Documents (§4.8) deliberately live **outside** IndexedDB, in the browser's Orig
 Two stacked sections plus a floating action button.
 
 **A. Unresolved Actions panel**
-- Collapsible list, all `Action` records with `status === "Unresolved"` across all apartments.
-- Sort: `urgency` descending (Critical → Low) as primary key, `dueDate` ascending as secondary key.
-- Each row shows: description, parent apartment title (linking to its case file), due date, urgency badge. Overdue items (`dueDate < today`) are visually flagged (e.g. red text/icon) independent of sort position.
+- Collapsible list, all `Action` and `TaskAction` records with `status === "Unresolved"` across all apartments and tasks, merged into one list.
+- Sort: `urgency` descending (Critical → Low) as primary key, `dueDate` ascending as secondary key, applied across the merged set.
+- Each row shows: description, parent apartment or task title (linking to its case file), due date, urgency badge. Overdue items (`dueDate < today`) are visually flagged (e.g. red text/icon) independent of sort position.
 - Collapsed/expanded state persists across navigation within a session (not required to persist across reloads).
 
 **B. Kanban board**
@@ -229,6 +244,15 @@ A dedicated Documents page for securely storing and transferring rental-applicat
 - Given a multi-selection including a folder is downloaded, then a single zip is produced whose internal paths mirror the virtual subtree.
 - Given documents are sent to a second device, then the receiver picks a destination folder before pairing, both sides see transfer progress, the received copies open from the receiver's own vault, and the sender shows a delivered count only after the receiver persisted everything.
 - Given the vault is locked or the page is reloaded, then documents are unreadable until the password is entered again.
+
+### 4.9 Tasks (`/tasks`, `/tasks/:id`)
+
+A second, independent case-file entity for tracking generic to-dos that aren't tied to any apartment — a title, a description, an optional timeline of `TaskEvent`s, and an optional list of `TaskAction`s, moving through its own 4-state workflow (`ToDo` → `InProgress` → `Finished`/`Cancelled`, unrestricted transitions like `ActionStatus`).
+
+- **Tasks page (`/tasks`)** mirrors the Apartments page: search/filter/sort, a List/Kanban view toggle (one column per `TaskStatus`, native drag-and-drop), and a FAB opening the Add Task modal. Unlike apartment status changes, no `TaskStatus` transition needs extra fields, so moving a task (via drag or the status menu) commits immediately with no intermediate modal.
+- **Task Detail page (`/tasks/:id`)** mirrors the Apartment Case File: header (title, status badge/menu, `⋮` menu for Edit/Export/Send/Delete), unresolved-actions summary, an editable description section, the task's timeline, and its action list. No photos/sketches — those are apartment-specific.
+- **Import/Export/P2P:** Tasks have their own independent JSON export schema (`ExportedTask`, nested `timeline`/`actions` exactly like `ExportedApartment`'s shape in §4.6) and their own `parseTaskImportPayload`/`detectTaskCollisions`/`importTasks` pipeline — not merged into an apartments export file. P2P transfer reuses the §4.6a pairing mechanics but on a separate peer-ID prefix (`umzugtask-`) and `?p2ptask=` link param, so apartment, task, and document (§4.8) pairing sessions can never cross-connect.
+- **Dashboard integration:** unresolved `TaskAction`s appear in the same merged Unresolved Actions panel as apartment actions (§4.1A), not a separate panel.
 
 ## 5. PWA & Deployment Requirements
 

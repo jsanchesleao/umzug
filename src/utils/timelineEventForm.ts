@@ -1,4 +1,3 @@
-import type { TimelineEvent } from "../types";
 import { todayISODate } from "./date";
 
 export interface TimelineEventFormValues {
@@ -17,7 +16,11 @@ export function emptyTimelineEventFormValues(): TimelineEventFormValues {
   };
 }
 
-export function timelineEventToFormValues(event: TimelineEvent): TimelineEventFormValues {
+export function timelineEventToFormValues(event: {
+  date: string;
+  shortDescription: string;
+  longDescription: string | null;
+}): TimelineEventFormValues {
   return {
     date: event.date,
     shortDescription: event.shortDescription,
