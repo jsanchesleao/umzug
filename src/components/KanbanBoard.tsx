@@ -16,6 +16,7 @@ function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
   const visibleStatuses = APARTMENT_STATUSES.filter(
     (status) => !settings.hiddenKanbanColumns.includes(status),
   );
+  const columnCount = Math.max(visibleStatuses.length, 3);
 
   const [selectedStatus, setSelectedStatus] = useState<ApartmentStatus>(
     visibleStatuses[0] ?? "AwaitingVisitation",
@@ -64,7 +65,10 @@ function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
             ))}
           </div>
 
-          <div className="kanban-board">
+          <div
+            className="kanban-board"
+            style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+          >
             {visibleStatuses.map((status) => {
               const columnApartments = byStatus(status);
               return (

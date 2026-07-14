@@ -16,6 +16,7 @@ function TasksKanbanBoard({ tasks, onStatusChange }: TasksKanbanBoardProps) {
   const visibleStatuses = TASK_STATUSES.filter(
     (status) => !settings.hiddenTaskKanbanColumns.includes(status),
   );
+  const columnCount = Math.max(visibleStatuses.length, 3);
 
   const [selectedStatus, setSelectedStatus] = useState<TaskStatus>(
     visibleStatuses[0] ?? "ToDo",
@@ -64,7 +65,10 @@ function TasksKanbanBoard({ tasks, onStatusChange }: TasksKanbanBoardProps) {
             ))}
           </div>
 
-          <div className="kanban-board">
+          <div
+            className="kanban-board"
+            style={{ gridTemplateColumns: `repeat(${columnCount}, minmax(0, 1fr))` }}
+          >
             {visibleStatuses.map((status) => {
               const columnTasks = byStatus(status);
               return (
