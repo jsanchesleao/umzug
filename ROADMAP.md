@@ -85,6 +85,7 @@ Resolved per SPEC §8.6: photos are in scope for v1, not deferred. Kept as its o
 ## Post-v1
 
 - [x] Peer-to-peer transfer between devices (§4.6a): PeerJS/WebRTC data channel paired via QR code (or a manual code/link fallback), reusing the §4.6 export/import schema and pipeline unchanged.
+- [x] Encrypted documents vault (§4.8): password-gated `/documents` page; PBKDF2 → AES-GCM crypto with per-document keys; OPFS storage with an encrypted virtual-folder index; upload/view/download/rename/move/delete; multi-select zip download; P2P document transfer (chunked, with progress and receiver-chosen destination folder); change-password and double-confirmed vault reset.
 
 ## Deferred / Out of Scope (per §7)
 

@@ -15,7 +15,7 @@ Umzug is a client-only Progressive Web App for tracking apartments during a rent
 - **Deployment:** static build published to GitHub Pages. Vite `base` config must match the repo's Pages path; all internal routing/asset references must work under that subpath.
 - **State management, drag-and-drop, date handling, form library:** left to the dev team's discretion; not prescribed by this spec.
 
-No authentication, no server, no analytics/telemetry — all processing and storage is local to the browser.
+No authentication, no server, no analytics/telemetry — all processing and storage is local to the browser. (The one carve-out: the encrypted documents vault (§4.8) is gated by a local password, which is a key-derivation secret for on-device encryption, not an account.)
 
 ## 3. Data Model
 
@@ -87,6 +87,8 @@ type ActionStatus = "Unresolved" | "Resolved" | "Cancelled";
 ### 3.3 Storage schema
 
 Store as four separate IndexedDB object stores (`apartments`, `timelineEvents`, `actions`, `photos`), each keyed by `id`, with indexes on the foreign keys (`apartmentId`, and `eventId` on `actions`). Rationale: the dashboard needs "all unresolved actions across every apartment, sorted by urgency then due date" — a normalized `actions` store lets this run as a single indexed query instead of loading and flattening every apartment document.
+
+Documents (§4.8) deliberately live **outside** IndexedDB, in the browser's Origin Private File System under `umzug-docs/`: `vault.json` (plaintext KDF metadata), `index.enc` (the encrypted index), and `blobs/<uuid>` (encrypted document bytes in one flat directory). They reference and are referenced by nothing in the Dexie stores.
 
 ## 4. Features
 
@@ -208,6 +210,26 @@ Constraints to build in regardless of whether this ships in v1:
 - JSON export must embed photos as base64 data URLs (there's no binary JSON format), which will make export files significantly larger when photos are included. Recommend exposing an "include photos" checkbox on export (default off for bulk export, on for single-apartment export) rather than always embedding them.
 - This feature can be descoped from v1 without affecting the rest of the data model — `photos` is an independent store with no other entity depending on it.
 
+### 4.8 Encrypted Documents Vault (`/documents`)
+
+A dedicated Documents page for securely storing and transferring rental-application paperwork — PDF files and images only, each with an optional text description. Fully independent of the apartment data model.
+
+- **Password & crypto:** first visit requires setting a password (min 8 characters, confirmed, with an explicit unrecoverability warning). PBKDF2-SHA256 (600,000 iterations, random 16-byte salt) derives an AES-GCM-256 *vault key* that encrypts a JSON index. Every stored document is encrypted with its own freshly generated AES-GCM-256 key; every encryption uses a fresh random 12-byte IV prepended to the ciphertext. Per-document keys, original file names, descriptions, and virtual paths live only inside the encrypted index. A wrong password surfaces as an AES-GCM auth-tag failure decrypting the index. The vault key exists only in memory while unlocked (lock control in the page menu; reload locks implicitly).
+- **Storage:** OPFS layout per §3.3 — encrypted blobs are named by random UUID in one flat directory.
+- **Virtual folders:** the folder tree exists only in the index (`folders[]` list plus per-entry `folder` path, so empty folders are representable). Rename/move of files or whole folders is a pure index rewrite; blobs never move. Names are kept unique per folder (` (2)` suffixing).
+- **Operations:** upload (restricted to `application/pdf` and `image/*`), inline viewing (image / embedded PDF), edit name + description, move, delete (confirmed), download single files, and download any multi-selection — including entire folders — as one zip that preserves the virtual subtree layout.
+- **P2P transfer:** reuses the §4.6a pairing mechanics (host code + QR / link / manual entry) but on a separate peer-ID prefix and `?p2pdoc=` link param, so apartment and document sessions can never cross-connect. The sender picks single documents or entire folders; documents travel decrypted over the DTLS-encrypted WebRTC channel in 256 KiB chunks with backpressure and progress reporting on both ends. The receiver chooses a destination folder first (creating folders on the fly if desired), re-encrypts each document with fresh keys into its own vault as it completes, and acks only after everything is persisted.
+- **Password management:** change password re-encrypts only the index (document keys are untouched); a double-confirmed reset (confirm dialog + typing `DELETE`) destroys the entire vault and is the only recovery path for a forgotten password.
+
+**Acceptance criteria**
+- Given no vault exists, when the user opens `/documents`, then they must create a password before any documents can be stored.
+- Given a locked vault, when a wrong password is entered, then a "Wrong password." error is shown and nothing decrypts.
+- Given a non-PDF/non-image file is selected for upload, then it is skipped with an error naming the file and no entry is created for it.
+- Given a folder is renamed or moved, then only `index.enc` changes — the encrypted blobs in OPFS are untouched.
+- Given a multi-selection including a folder is downloaded, then a single zip is produced whose internal paths mirror the virtual subtree.
+- Given documents are sent to a second device, then the receiver picks a destination folder before pairing, both sides see transfer progress, the received copies open from the receiver's own vault, and the sender shows a delivered count only after the receiver persisted everything.
+- Given the vault is locked or the page is reloaded, then documents are unreadable until the password is entered again.
+
 ## 5. PWA & Deployment Requirements
 
 - Valid web app manifest (name, icons at standard sizes, `display: standalone`, theme colors) so the app is installable on desktop and mobile ("Add to Home Screen").
@@ -220,7 +242,7 @@ Constraints to build in regardless of whether this ships in v1:
 
 ## 6. Non-Functional Requirements
 
-- No backend, no network calls required for core functionality; no user accounts/authentication.
+- No backend, no network calls required for core functionality; no user accounts/authentication (the documents-vault password of §4.8 is a local encryption secret, not an account).
 - All data stays on-device; nothing is transmitted anywhere by the app itself.
 - Target smooth performance up to a few hundred apartment records with typical timeline/action counts (tens of events/actions each) on mid-range mobile hardware.
 - Supported browsers: current versions of Chrome, Edge, Firefox, Safari (all support IndexedDB and Service Workers).

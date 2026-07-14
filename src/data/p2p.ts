@@ -19,22 +19,22 @@ export function generatePairingCode(length = CODE_LENGTH): string {
   return code;
 }
 
-export function buildPairingLink(code: string): string {
-  return `${window.location.origin}${import.meta.env.BASE_URL}?p2p=${code}`;
+export function buildPairingLink(code: string, param = "p2p"): string {
+  return `${window.location.origin}${import.meta.env.BASE_URL}?${param}=${code}`;
 }
 
 /**
  * Accepts a bare pairing code or a pasted/scanned pairing link and returns
  * the normalized code, or null if the input doesn't look like either.
  */
-export function parsePairingInput(raw: string): string | null {
+export function parsePairingInput(raw: string, param = "p2p"): string | null {
   const trimmed = raw.trim();
   if (!trimmed) return null;
 
   let candidate = trimmed;
   try {
     const url = new URL(trimmed);
-    const fromQuery = url.searchParams.get("p2p");
+    const fromQuery = url.searchParams.get(param);
     if (!fromQuery) return null;
     candidate = fromQuery;
   } catch {
@@ -53,14 +53,14 @@ export function parsePairingInput(raw: string): string | null {
  * Retries with a fresh code if the ID happens to already be taken by another
  * live Umzug session on the shared public broker.
  */
-export function createHostPeer(): Promise<{ peer: Peer; code: string }> {
+export function createHostPeer(prefix = PEER_ID_PREFIX): Promise<{ peer: Peer; code: string }> {
   return new Promise((resolve, reject) => {
     let attempt = 0;
 
     function tryCreate() {
       attempt++;
       const code = generatePairingCode();
-      const peer = new Peer(PEER_ID_PREFIX + code);
+      const peer = new Peer(prefix + code);
 
       function onOpen() {
         peer.off("error", onError);
@@ -100,6 +100,6 @@ export function destroyPeer(peer: Peer | null | undefined): void {
   }
 }
 
-export function connectToHost(peer: Peer, code: string): DataConnection {
-  return peer.connect(PEER_ID_PREFIX + code, { reliable: true });
+export function connectToHost(peer: Peer, code: string, prefix = PEER_ID_PREFIX): DataConnection {
+  return peer.connect(prefix + code, { reliable: true });
 }
