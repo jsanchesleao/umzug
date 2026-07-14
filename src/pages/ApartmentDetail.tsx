@@ -88,8 +88,8 @@ function ApartmentDetail() {
 
   return (
     <main className="case-file">
-      <Link to="/" className="back-link">
-        ← Back to dashboard
+      <Link to="/apartments" className="back-link">
+        ← Back to apartments
       </Link>
 
       <div className="case-file-grid">

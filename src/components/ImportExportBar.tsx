@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   buildAllApartmentsExport,
+  describeInclusion,
   describeOutcome,
   detectCollisions,
   downloadJson,
@@ -27,6 +28,7 @@ function ImportExportBar() {
   const [status, setStatus] = useState<Status>(null);
   const [pendingImport, setPendingImport] = useState<PendingImport | null>(null);
   const [includePhotos, setIncludePhotos] = useState(false);
+  const [includeSketches, setIncludeSketches] = useState(false);
   const [p2pModal, setP2PModal] = useState<"send" | "receive" | null>(null);
   const [initialPairingCode, setInitialPairingCode] = useState<string | undefined>(undefined);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -53,8 +55,12 @@ function ImportExportBar() {
   }, []);
 
   async function handleExportAll() {
-    const apartments = await buildAllApartmentsExport(includePhotos);
+    const apartments = await buildAllApartmentsExport(includePhotos, includeSketches);
     downloadJson(`umzug-export-${new Date().toISOString().slice(0, 10)}.json`, apartments);
+    setStatus({
+      type: "success",
+      message: `Exported ${apartments.length} apartment${apartments.length === 1 ? "" : "s"}. ${describeInclusion(includePhotos, includeSketches)}`,
+    });
   }
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
@@ -125,7 +131,15 @@ function ImportExportBar() {
               checked={includePhotos}
               onChange={(e) => setIncludePhotos(e.target.checked)}
             />
-            Include photos & sketches
+            Include photos
+          </label>
+          <label className="case-file-menu-checkbox">
+            <input
+              type="checkbox"
+              checked={includeSketches}
+              onChange={(e) => setIncludeSketches(e.target.checked)}
+            />
+            Include sketches
           </label>
           <button
             type="button"

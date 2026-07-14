@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 interface AppHeaderProps {
   onOpenSettings: () => void;
@@ -15,6 +15,21 @@ function AppHeader({ onOpenSettings, menu }: AppHeaderProps) {
           Umzug
         </Link>
       </div>
+      <nav className="app-header-nav">
+        <NavLink
+          to="/"
+          end
+          className={({ isActive }) => (isActive ? "app-header-nav-link active" : "app-header-nav-link")}
+        >
+          Dashboard
+        </NavLink>
+        <NavLink
+          to="/apartments"
+          className={({ isActive }) => (isActive ? "app-header-nav-link active" : "app-header-nav-link")}
+        >
+          Apartments
+        </NavLink>
+      </nav>
       <button
         type="button"
         className="app-header-settings"

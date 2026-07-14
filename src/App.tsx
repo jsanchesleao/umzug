@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import Dashboard from "./pages/Dashboard.tsx";
+import Apartments from "./pages/Apartments.tsx";
 import ApartmentDetail from "./pages/ApartmentDetail.tsx";
 import OptionsModal from "./components/OptionsModal.tsx";
 import AppHeader from "./components/AppHeader.tsx";
@@ -14,11 +15,12 @@ function AppShell() {
     <>
       <AppHeader
         onOpenSettings={() => setOptionsOpen(true)}
-        menu={location.pathname === "/" ? <ImportExportBar /> : null}
+        menu={location.pathname === "/apartments" ? <ImportExportBar /> : null}
       />
 
       <Routes>
         <Route path="/" element={<Dashboard />} />
+        <Route path="/apartments" element={<Apartments />} />
         <Route path="/apartments/:id" element={<ApartmentDetail />} />
       </Routes>
 

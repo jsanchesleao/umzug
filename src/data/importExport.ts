@@ -158,6 +158,13 @@ export async function buildAllApartmentsExport(
   );
 }
 
+export function describeInclusion(includePhotos: boolean, includeSketches: boolean): string {
+  if (includePhotos && includeSketches) return "Photos and sketches included.";
+  if (includePhotos) return "Photos included, sketches excluded.";
+  if (includeSketches) return "Sketches included, photos excluded.";
+  return "Photos and sketches excluded.";
+}
+
 export function downloadJson(filename: string, data: unknown): void {
   const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);

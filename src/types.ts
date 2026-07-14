@@ -123,6 +123,7 @@ export interface AppSettings {
   currency: CurrencyCode;
   dateFormat: DateFormatOption;
   sketchIgnoreTouch: boolean;
+  hiddenKanbanColumns: ApartmentStatus[];
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -130,4 +131,5 @@ export const DEFAULT_SETTINGS: AppSettings = {
   currency: "EUR",
   dateFormat: "DMY",
   sketchIgnoreTouch: false,
+  hiddenKanbanColumns: [],
 };

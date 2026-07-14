@@ -143,11 +143,47 @@ button {
   background: rgba(176, 71, 61, 0.14);
 }
 
+/* Pages */
+.page {
+  max-width: min(1440px, 90vw);
+  margin-inline: auto;
+}
+
 /* Dashboard */
 
 .dashboard {
   padding: 1rem;
   padding-bottom: 5rem;
+}
+
+/* Apartments page */
+
+.apartments-page {
+  padding: 1rem;
+  padding-bottom: 5rem;
+}
+
+.apartments-view-toggle {
+  display: flex;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.view-toggle-btn {
+  padding: 0.5em 0.9em;
+  border-radius: var(--radius);
+  border: 1px solid var(--color-border-strong);
+  background: var(--color-surface);
+  color: var(--color-text);
+  cursor: pointer;
+  font: inherit;
+  font-size: 0.85em;
+}
+
+.view-toggle-btn.active {
+  background: var(--color-primary);
+  color: var(--color-primary-text);
+  border-color: var(--color-primary);
 }
 
 .visually-hidden {
@@ -210,6 +246,16 @@ button {
   line-height: 1;
   cursor: pointer;
   padding: 0 0.25em;
+}
+
+.kanban-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 0.5rem;
+}
+
+.column-visibility-list {
+  min-width: 11rem;
 }
 
 .kanban-tabs {
@@ -394,6 +440,9 @@ button {
 .badge-unresolved {
   background: var(--color-danger);
   color: var(--color-danger-text);
+}
+
+.apartment-card .badge-unresolved {
   position: absolute;
   bottom: 0.5rem;
   right: 0.5rem;
@@ -412,6 +461,69 @@ button {
   border-left: 2px solid var(--color-info);
   border-radius: var(--radius-sm);
   padding: 0.4em 0.6em;
+}
+
+.apartment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+
+.apartment-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.85rem;
+}
+
+.apartment-row-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+  flex: 1;
+}
+
+.apartment-row-title-line {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.apartment-row-title {
+  font-family: var(--font-serif);
+  font-weight: 700;
+  font-size: 1em;
+  color: var(--color-text-strong);
+  text-decoration: none;
+}
+
+.apartment-row-title:hover {
+  text-decoration: underline;
+}
+
+.apartment-row-address {
+  font-size: 0.8em;
+  color: var(--color-muted);
+}
+
+.apartment-row-rent,
+.apartment-row-date {
+  font-size: 0.85em;
+  color: var(--color-muted);
+  white-space: nowrap;
+}
+
+@media (max-width: 899px) {
+  .apartment-row {
+    flex-wrap: wrap;
+    align-items: flex-start;
+  }
 }
 
 .status-menu {
@@ -568,6 +680,30 @@ button {
 .app-header-title:hover,
 .app-header-title:focus-visible {
   color: var(--color-primary);
+}
+
+.app-header-nav {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.app-header-nav-link {
+  font-size: 0.9rem;
+  color: var(--color-muted);
+  text-decoration: none;
+  padding: 0.3em 0.1em;
+  border-bottom: 2px solid transparent;
+}
+
+.app-header-nav-link:hover,
+.app-header-nav-link:focus-visible {
+  color: var(--color-primary);
+}
+
+.app-header-nav-link.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
 }
 
 .app-header-settings {
@@ -1463,6 +1599,7 @@ button {
   flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
+  max-width: 50rem;
 }
 
 .filter-search {
@@ -1483,6 +1620,19 @@ button {
   font-size: 0.85em;
   color: var(--color-muted);
   white-space: nowrap;
+}
+
+.filter-status-trigger {
+  width: auto;
+  min-width: 0;
+  padding: 0 0.75rem;
+  font-size: 0.85em;
+  white-space: nowrap;
+}
+
+.filter-sort {
+  margin-bottom: 0;
+  min-width: 10rem;
 }
 
 @media (max-width: 899px) {

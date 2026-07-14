@@ -5,6 +5,7 @@ import Modal from "./Modal";
 import {
   buildApartmentExport,
   buildAllApartmentsExport,
+  describeInclusion,
   describeOutcome,
   type ImportOutcome,
 } from "../data/importExport";
@@ -28,11 +29,17 @@ function P2PSendModal(props: P2PSendModalProps & Scope) {
   const { onClose, scope } = props;
   const [state, setState] = useState<SendState>({ phase: "connecting" });
   const [includePhotos, setIncludePhotos] = useState(scope === "apartment");
+  const [includeSketches, setIncludeSketches] = useState(scope === "apartment");
   const includePhotosRef = useRef(includePhotos);
+  const includeSketchesRef = useRef(includeSketches);
 
   useEffect(() => {
     includePhotosRef.current = includePhotos;
   }, [includePhotos]);
+
+  useEffect(() => {
+    includeSketchesRef.current = includeSketches;
+  }, [includeSketches]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,8 +64,12 @@ function P2PSendModal(props: P2PSendModalProps & Scope) {
         try {
           const exported =
             scope === "apartment"
-              ? await buildApartmentExport(props.apartmentId, includePhotosRef.current)
-              : await buildAllApartmentsExport(includePhotosRef.current);
+              ? await buildApartmentExport(
+                  props.apartmentId,
+                  includePhotosRef.current,
+                  includeSketchesRef.current,
+                )
+              : await buildAllApartmentsExport(includePhotosRef.current, includeSketchesRef.current);
           const message: P2PMessage = { type: "payload", data: JSON.stringify(exported) };
           connection.send(message);
         } catch (error) {
@@ -143,7 +154,16 @@ function P2PSendModal(props: P2PSendModalProps & Scope) {
               disabled={state.phase === "sending"}
               onChange={(e) => setIncludePhotos(e.target.checked)}
             />
-            Include photos & sketches
+            Include photos
+          </label>
+          <label className="filter-checkbox">
+            <input
+              type="checkbox"
+              checked={includeSketches}
+              disabled={state.phase === "sending"}
+              onChange={(e) => setIncludeSketches(e.target.checked)}
+            />
+            Include sketches
           </label>
 
           <div className="p2p-qr">
@@ -179,7 +199,11 @@ function P2PSendModal(props: P2PSendModalProps & Scope) {
         </>
       )}
 
-      {state.phase === "done" && <p>Sent — {describeOutcome(state.outcome)}</p>}
+      {state.phase === "done" && (
+        <p>
+          Sent — {describeOutcome(state.outcome)} {describeInclusion(includePhotos, includeSketches)}
+        </p>
+      )}
       {state.phase === "error" && (
         <div className="banner banner-error">{state.message}</div>
       )}
