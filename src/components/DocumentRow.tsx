@@ -1,3 +1,4 @@
+import { useRef } from "react";
 import type { DocumentEntry } from "../documents/types";
 import { formatBytes } from "../utils/format";
 
@@ -20,6 +21,19 @@ function DocumentRow({
   onEdit,
   onDelete,
 }: DocumentRowProps) {
+  const menuRef = useRef<HTMLDetailsElement>(null);
+
+  function closeMenu() {
+    if (menuRef.current) menuRef.current.open = false;
+  }
+
+  function withClose(action: () => void) {
+    return () => {
+      closeMenu();
+      action();
+    };
+  }
+
   return (
     <li className={selected ? "doc-row doc-row-selected" : "doc-row"}>
       <input
@@ -50,6 +64,26 @@ function DocumentRow({
           Delete
         </button>
       </div>
+      <details className="status-menu doc-row-menu" ref={menuRef}>
+        <summary className="status-menu-trigger" aria-label={`Actions for ${entry.name}`}>
+          ⋮
+        </summary>
+        <div className="status-menu-list">
+          <button type="button" className="status-menu-option" onClick={withClose(onDownload)}>
+            Download
+          </button>
+          <button type="button" className="status-menu-option" onClick={withClose(onEdit)}>
+            Edit
+          </button>
+          <button
+            type="button"
+            className="status-menu-option danger"
+            onClick={withClose(onDelete)}
+          >
+            Delete
+          </button>
+        </div>
+      </details>
     </li>
   );
 }

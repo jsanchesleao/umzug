@@ -51,6 +51,8 @@
 
   --transition-collapse: 220ms ease-in-out;
 
+  --bottom-nav-height: 3.25rem;
+
   --font-serif: Georgia, "Iowan Old Style", "Palatino Linotype", Palatino, serif;
   --font-mono:
     "SFMono-Regular", Consolas, "Liberation Mono", Menlo, Courier, monospace;
@@ -787,6 +789,10 @@ button {
   font-weight: 600;
   color: var(--color-text);
   text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
 }
 
 .app-header-title:hover,
@@ -840,6 +846,44 @@ button {
   color: var(--color-primary);
 }
 
+.app-bottom-nav {
+  display: none; /* shown only under 899px, in the media query below */
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 20;
+  align-items: stretch;
+  justify-content: space-around;
+  background: var(--color-bg-raised);
+  border-top: 1px solid var(--color-border-strong);
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+.app-bottom-nav-link {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.6em 0.25em;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  text-decoration: none;
+  border-top: 2px solid transparent;
+  text-align: center;
+}
+
+.app-bottom-nav-link:hover,
+.app-bottom-nav-link:focus-visible {
+  color: var(--color-primary);
+}
+
+.app-bottom-nav-link.active {
+  color: var(--color-primary);
+  border-top-color: var(--color-primary);
+}
+
 @media (max-width: 899px) {
   .kanban-tabs {
     display: flex;
@@ -855,6 +899,26 @@ button {
 
   .kanban-column[data-active="true"] {
     display: block;
+  }
+
+  .app-header-nav {
+    display: none;
+  }
+
+  .app-bottom-nav {
+    display: flex;
+  }
+
+  body {
+    padding-bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom));
+  }
+
+  .fab {
+    bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 1.5rem);
+  }
+
+  .fab-menu {
+    bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom) + 5.5rem);
   }
 }
 
@@ -974,10 +1038,12 @@ button {
 .modal--fullscreen {
   width: 100vw;
   height: 100vh;
+  height: 100dvh;
   max-width: none;
   max-height: none;
   border-radius: 0;
-  padding: 0;
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom)
+    env(safe-area-inset-left);
   display: flex;
   flex-direction: column;
   overflow: hidden;
@@ -2128,6 +2194,55 @@ button {
   display: flex;
   gap: 0.25rem;
   margin-left: auto;
+}
+
+.doc-row-checkbox {
+  width: 1.1rem;
+  height: 1.1rem;
+  flex: none;
+}
+
+.doc-row-menu {
+  display: none;
+  margin-left: auto;
+}
+
+.doc-selection-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.doc-selection-menu {
+  display: none;
+  margin-left: auto;
+}
+
+@media (max-width: 899px) {
+  .doc-row-size {
+    display: none;
+  }
+
+  .doc-row-actions {
+    display: none;
+  }
+
+  .doc-row-menu {
+    display: block;
+  }
+
+  .doc-row-checkbox {
+    width: 1.5rem;
+    height: 1.5rem;
+  }
+
+  .doc-selection-actions {
+    display: none;
+  }
+
+  .doc-selection-menu {
+    display: block;
+  }
 }
 
 .doc-progress {

@@ -1,6 +1,7 @@
 import { useRef, useState } from "react";
 import { useVault } from "../documents/useVault";
 import DocumentRow from "./DocumentRow";
+import FolderRow from "./FolderRow";
 import DocumentViewerModal from "./DocumentViewerModal";
 import DocumentEditModal from "./DocumentEditModal";
 import FolderPickerModal from "./FolderPickerModal";
@@ -36,6 +37,7 @@ type Status = { type: "error" | "success"; message: string } | null;
 function DocumentsBrowser() {
   const { index, addFiles, mutateIndex, removeItems, getBytes } = useVault();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const selectionMenuRef = useRef<HTMLDetailsElement>(null);
   const [currentFolder, setCurrentFolder] = useState("");
   const [selectedEntries, setSelectedEntries] = useState<Set<string>>(new Set());
   const [selectedFolders, setSelectedFolders] = useState<Set<string>>(new Set());
@@ -58,6 +60,13 @@ function DocumentsBrowser() {
   function clearSelection() {
     setSelectedEntries(new Set());
     setSelectedFolders(new Set());
+  }
+
+  function closeSelectionMenu(action: () => void) {
+    return () => {
+      if (selectionMenuRef.current) selectionMenuRef.current.open = false;
+      action();
+    };
   }
 
   function toggleEntry(id: string, checked: boolean) {
@@ -279,37 +288,83 @@ function DocumentsBrowser() {
           <span className="doc-selection-count">
             {selectionCount} selected
           </span>
-          <button type="button" className="btn btn-sm" onClick={handleSendSelection}>
-            Send
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm"
-            disabled={busy !== null}
-            onClick={handleDownloadSelection}
-          >
-            Download
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() =>
-              setModal({
-                mode: "move",
-                entryIds: [...selectedEntries],
-                folderPaths: [...selectedFolders],
-              })
-            }
-          >
-            Move
-          </button>
-          <button
-            type="button"
-            className="btn btn-sm"
-            onClick={() => requestDeleteSelection([...selectedEntries], [...selectedFolders])}
-          >
-            Delete
-          </button>
+          <div className="doc-selection-actions">
+            <button type="button" className="btn btn-sm" onClick={handleSendSelection}>
+              Send
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm"
+              disabled={busy !== null}
+              onClick={handleDownloadSelection}
+            >
+              Download
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() =>
+                setModal({
+                  mode: "move",
+                  entryIds: [...selectedEntries],
+                  folderPaths: [...selectedFolders],
+                })
+              }
+            >
+              Move
+            </button>
+            <button
+              type="button"
+              className="btn btn-sm"
+              onClick={() => requestDeleteSelection([...selectedEntries], [...selectedFolders])}
+            >
+              Delete
+            </button>
+          </div>
+          <details className="status-menu doc-selection-menu" ref={selectionMenuRef}>
+            <summary className="status-menu-trigger" aria-label="Actions for selected items">
+              ⋮
+            </summary>
+            <div className="status-menu-list">
+              <button
+                type="button"
+                className="status-menu-option"
+                onClick={closeSelectionMenu(handleSendSelection)}
+              >
+                Send
+              </button>
+              <button
+                type="button"
+                className="status-menu-option"
+                disabled={busy !== null}
+                onClick={closeSelectionMenu(handleDownloadSelection)}
+              >
+                Download
+              </button>
+              <button
+                type="button"
+                className="status-menu-option"
+                onClick={closeSelectionMenu(() =>
+                  setModal({
+                    mode: "move",
+                    entryIds: [...selectedEntries],
+                    folderPaths: [...selectedFolders],
+                  }),
+                )}
+              >
+                Move
+              </button>
+              <button
+                type="button"
+                className="status-menu-option danger"
+                onClick={closeSelectionMenu(() =>
+                  requestDeleteSelection([...selectedEntries], [...selectedFolders]),
+                )}
+              >
+                Delete
+              </button>
+            </div>
+          </details>
           <button type="button" className="btn btn-sm" onClick={clearSelection}>
             Clear
           </button>
@@ -323,39 +378,15 @@ function DocumentsBrowser() {
       ) : (
         <ul className="doc-list">
           {subfolders.map((path) => (
-            <li key={path} className="doc-row doc-row-folder">
-              <input
-                type="checkbox"
-                className="doc-row-checkbox"
-                aria-label={`Select folder ${pathName(path)}`}
-                checked={selectedFolders.has(path)}
-                onChange={(e) => toggleFolder(path, e.target.checked)}
-              />
-              <button type="button" className="doc-row-main" onClick={() => navigateTo(path)}>
-                <span className="doc-row-icon" aria-hidden="true">
-                  📁
-                </span>
-                <span className="doc-row-text">
-                  <span className="doc-row-name">{pathName(path)}</span>
-                </span>
-              </button>
-              <div className="doc-row-actions">
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => setModal({ mode: "renameFolder", path })}
-                >
-                  Rename
-                </button>
-                <button
-                  type="button"
-                  className="btn btn-sm"
-                  onClick={() => requestDeleteSelection([], [path])}
-                >
-                  Delete
-                </button>
-              </div>
-            </li>
+            <FolderRow
+              key={path}
+              path={path}
+              selected={selectedFolders.has(path)}
+              onToggleSelected={(checked) => toggleFolder(path, checked)}
+              onOpen={() => navigateTo(path)}
+              onRename={() => setModal({ mode: "renameFolder", path })}
+              onDelete={() => requestDeleteSelection([], [path])}
+            />
           ))}
           {entries.map((entry) => (
             <DocumentRow
