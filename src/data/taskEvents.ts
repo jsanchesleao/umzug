@@ -7,6 +7,14 @@ export function listTaskEventsForTask(taskId: string): Promise<TaskEvent[]> {
   return db.taskEvents.where("taskId").equals(taskId).sortBy("date");
 }
 
+/**
+ * The N most recent task events across every task, newest first.
+ * Runs as a single indexed query against the `date` index (reverse order).
+ */
+export function listRecentTaskEvents(limit: number): Promise<TaskEvent[]> {
+  return db.taskEvents.orderBy("date").reverse().limit(limit).toArray();
+}
+
 export function getTaskEvent(id: string): Promise<TaskEvent | undefined> {
   return db.taskEvents.get(id);
 }

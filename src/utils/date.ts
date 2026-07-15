@@ -8,6 +8,12 @@ export function isOverdue(dueDate: string): boolean {
   return dueDate < todayISODate();
 }
 
+export function isDateTimeOverdue(dateTime: string): boolean {
+  const parsed = new Date(toDateTimeLocalInputValue(dateTime));
+  if (Number.isNaN(parsed.getTime())) return false;
+  return parsed.getTime() < Date.now();
+}
+
 export function formatDate(isoDate: string, format: DateFormatOption): string {
   const [year, month, day] = isoDate.slice(0, 10).split("-");
   switch (format) {

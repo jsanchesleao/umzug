@@ -129,6 +129,22 @@ export interface SketchPage {
   updatedAt: string;
 }
 
+export type DashboardNoteKind = "text" | "sketch";
+
+export const NOTE_COLORS = ["yellow", "pink", "blue", "green", "purple"] as const;
+
+export type NoteColor = (typeof NOTE_COLORS)[number];
+
+export interface DashboardNote {
+  id: string;
+  kind: DashboardNoteKind;
+  text: string | null;
+  blob: Blob | null;
+  color: NoteColor;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type ThemeMode = "system" | "light" | "dark";
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];

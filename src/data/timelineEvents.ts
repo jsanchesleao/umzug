@@ -7,6 +7,14 @@ export function listTimelineEventsForApartment(apartmentId: string): Promise<Tim
   return db.timelineEvents.where("apartmentId").equals(apartmentId).sortBy("date");
 }
 
+/**
+ * The N most recent timeline events across every apartment, newest first.
+ * Runs as a single indexed query against the `date` index (reverse order).
+ */
+export function listRecentTimelineEvents(limit: number): Promise<TimelineEvent[]> {
+  return db.timelineEvents.orderBy("date").reverse().limit(limit).toArray();
+}
+
 export function getTimelineEvent(id: string): Promise<TimelineEvent | undefined> {
   return db.timelineEvents.get(id);
 }
