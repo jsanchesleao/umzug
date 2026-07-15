@@ -599,10 +599,39 @@ button {
   white-space: nowrap;
 }
 
+.apartment-row-meta {
+  display: contents;
+}
+
 @media (max-width: 899px) {
   .apartment-row {
+    position: relative;
     flex-wrap: wrap;
     align-items: flex-start;
+    row-gap: 0.4rem;
+    padding-right: 4rem;
+  }
+
+  .apartment-row-main {
+    flex: 1 1 100%;
+  }
+
+  .apartment-row-meta {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    min-width: 0;
+  }
+
+  .apartment-row-meta .status-badge {
+    flex-shrink: 0;
+  }
+
+  .apartment-row .status-menu {
+    position: absolute;
+    top: 0.6rem;
+    right: 0.85rem;
   }
 }
 

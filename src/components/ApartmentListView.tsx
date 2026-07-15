@@ -38,11 +38,11 @@ function ApartmentListView({ apartments, unresolvedCounts, onStatusChange }: Apa
             {apartment.address && <span className="apartment-row-address">{apartment.address}</span>}
           </div>
 
-          <StatusBadge status={apartment.status} label={APARTMENT_STATUS_LABELS[apartment.status]} />
-
-          <span className="apartment-row-rent">{formatRent(apartment.coldRent, settings.currency)}</span>
-
-          <span className="apartment-row-date">{formatDate(apartment.entryDate, settings.dateFormat)}</span>
+          <div className="apartment-row-meta">
+            <StatusBadge status={apartment.status} label={APARTMENT_STATUS_LABELS[apartment.status]} />
+            <span className="apartment-row-rent">{formatRent(apartment.coldRent, settings.currency)}</span>
+            <span className="apartment-row-date">{formatDate(apartment.entryDate, settings.dateFormat)}</span>
+          </div>
 
           <StatusMenu
             currentStatus={apartment.status}

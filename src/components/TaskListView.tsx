@@ -33,7 +33,9 @@ function TaskListView({ tasks, unresolvedCounts, onStatusChange }: TaskListViewP
             {task.description && <span className="apartment-row-address">{task.description}</span>}
           </div>
 
-          <StatusBadge status={task.status} label={TASK_STATUS_LABELS[task.status]} />
+          <div className="apartment-row-meta">
+            <StatusBadge status={task.status} label={TASK_STATUS_LABELS[task.status]} />
+          </div>
 
           <StatusMenu
             currentStatus={task.status}
