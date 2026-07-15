@@ -1812,9 +1812,22 @@ button {
   border-color: var(--color-primary);
 }
 
+.visit-row-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+  min-width: 0;
+}
+
 .visit-row-title {
   color: var(--color-text-strong);
   font-weight: 600;
+  overflow-wrap: anywhere;
+}
+
+.visit-row-address {
+  font-size: 0.85em;
+  color: var(--color-muted);
   overflow-wrap: anywhere;
 }
 

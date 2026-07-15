@@ -18,6 +18,7 @@ import SketchSection from "../components/SketchSection";
 import CollapsibleSection from "../components/CollapsibleSection";
 import { formatRent } from "../utils/rent";
 import { formatDate, formatDateTime } from "../utils/date";
+import { buildGoogleMapsUrl } from "../utils/maps";
 import { useSettings } from "../settings/useSettings";
 import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { ApartmentStatus } from "../types";
@@ -166,7 +167,14 @@ function ApartmentDetail() {
             </div>
 
             <div className="case-file-meta">
-              {apartment.address && <div>Address: {apartment.address}</div>}
+              {apartment.address && (
+                <div>
+                  Address: {apartment.address}{" "}
+                  <a href={buildGoogleMapsUrl(apartment.address)} target="_blank" rel="noopener noreferrer">
+                    🗺️
+                  </a>
+                </div>
+              )}
               <div>Cold rent: {formatRent(apartment.coldRent, settings.currency)}</div>
               <div>Warm rent: {formatRent(apartment.warmRent, settings.currency)}</div>
               {apartment.originalLink && (
@@ -182,7 +190,14 @@ function ApartmentDetail() {
             {apartment.status === "VisitScheduled" && apartment.visitDate && (
               <div className="case-file-visit">
                 <div>Visit date: {formatDateTime(apartment.visitDate, settings.dateFormat)}</div>
-                <div>Visit address: {apartment.visitAddress}</div>
+                {apartment.visitAddress && (
+                  <div>
+                    Visit address: {apartment.visitAddress}{" "}
+                    <a href={buildGoogleMapsUrl(apartment.visitAddress)} target="_blank" rel="noopener noreferrer">
+                      🗺️
+                    </a>
+                  </div>
+                )}
               </div>
             )}
 

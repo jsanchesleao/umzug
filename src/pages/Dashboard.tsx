@@ -75,6 +75,7 @@ function Dashboard() {
       .map((a) => ({
         apartmentId: a.id,
         apartmentTitle: a.title,
+        visitAddress: a.visitAddress || a.address,
         visitDate: a.visitDate as string,
         overdue: isDateTimeOverdue(a.visitDate as string),
       }))
