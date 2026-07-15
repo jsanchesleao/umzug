@@ -24,7 +24,7 @@ function UnresolvedActionsPanel({ entries, onStatusChange }: UnresolvedActionsPa
       className="dashboard-card"
       entityId="dashboard"
       cardKey="unresolved-actions"
-      title={`Unresolved Actions (${entries.length})`}
+      title={`Actions (${entries.length})`}
     >
       <div className="action-list">
         {entries.length === 0 && <p className="empty-column">No unresolved actions.</p>}

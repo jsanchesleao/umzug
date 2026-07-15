@@ -3,7 +3,6 @@ import type { DragEvent } from "react";
 import { TASK_STATUSES, TASK_STATUS_LABELS } from "../types";
 import type { Task, TaskStatus } from "../types";
 import TaskCard from "./TaskCard";
-import ColumnVisibilityMenu from "./ColumnVisibilityMenu";
 import { useSettings } from "../settings/useSettings";
 
 interface TasksKanbanBoardProps {
@@ -12,7 +11,7 @@ interface TasksKanbanBoardProps {
 }
 
 function TasksKanbanBoard({ tasks, onStatusChange }: TasksKanbanBoardProps) {
-  const { settings, updateSettings } = useSettings();
+  const { settings } = useSettings();
   const visibleStatuses = TASK_STATUSES.filter(
     (status) => !settings.hiddenTaskKanbanColumns.includes(status),
   );
@@ -39,15 +38,6 @@ function TasksKanbanBoard({ tasks, onStatusChange }: TasksKanbanBoardProps) {
 
   return (
     <div>
-      <div className="kanban-toolbar">
-        <ColumnVisibilityMenu
-          statuses={TASK_STATUSES}
-          labels={TASK_STATUS_LABELS}
-          hidden={settings.hiddenTaskKanbanColumns}
-          onChange={(hiddenTaskKanbanColumns) => updateSettings({ hiddenTaskKanbanColumns })}
-        />
-      </div>
-
       {visibleStatuses.length === 0 ? (
         <p className="empty-column">All columns are hidden. Use the columns menu above to show some.</p>
       ) : (

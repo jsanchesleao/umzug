@@ -175,8 +175,13 @@ button {
 
 /* Pages */
 .page {
-  max-width: min(1440px, 90vw);
   margin-inline: auto;
+}
+
+@media (min-width: 899px) {
+  .page {
+    max-width: min(1440px, 90vw);
+  }
 }
 
 /* Dashboard */
@@ -226,10 +231,17 @@ button {
   padding-bottom: 5rem;
 }
 
+.view-toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
 .apartments-view-toggle {
   display: flex;
   gap: 0.5rem;
-  margin-bottom: 1rem;
 }
 
 .view-toggle-btn {
@@ -309,12 +321,6 @@ button {
   line-height: 1;
   cursor: pointer;
   padding: 0 0.25em;
-}
-
-.kanban-toolbar {
-  display: flex;
-  justify-content: flex-end;
-  margin-bottom: 0.5rem;
 }
 
 .column-visibility-list {

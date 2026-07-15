@@ -4,10 +4,13 @@ import TasksKanbanBoard from "../components/TasksKanbanBoard";
 import TaskListView from "../components/TaskListView";
 import TaskModal from "../components/TaskModal";
 import TaskFilterBar from "../components/TaskFilterBar";
+import ColumnVisibilityMenu from "../components/ColumnVisibilityMenu";
+import { useSettings } from "../settings/useSettings";
 import { listTasks, updateTask } from "../data/tasks";
 import { getUnresolvedTaskActions } from "../data/taskActions";
 import { sortTasks } from "../utils/taskSort";
 import type { TaskSortOption } from "../utils/taskSort";
+import { TASK_STATUSES, TASK_STATUS_LABELS } from "../types";
 import type { Task, TaskStatus } from "../types";
 
 type ViewMode = "list" | "kanban";
@@ -15,6 +18,7 @@ type ViewMode = "list" | "kanban";
 function Tasks() {
   const tasks = useLiveQuery(() => listTasks(), []);
   const unresolvedTaskActions = useLiveQuery(() => getUnresolvedTaskActions(), []);
+  const { settings, updateSettings } = useSettings();
   const [adding, setAdding] = useState(false);
   const [search, setSearch] = useState("");
   const [onlyUnresolved, setOnlyUnresolved] = useState(false);
@@ -70,23 +74,34 @@ function Tasks() {
         showStatusAndSort={viewMode === "list"}
       />
 
-      <div className="apartments-view-toggle" role="tablist" aria-label="View mode">
-        <button
-          type="button"
-          className={viewMode === "list" ? "view-toggle-btn active" : "view-toggle-btn"}
-          aria-pressed={viewMode === "list"}
-          onClick={() => setViewMode("list")}
-        >
-          List
-        </button>
-        <button
-          type="button"
-          className={viewMode === "kanban" ? "view-toggle-btn active" : "view-toggle-btn"}
-          aria-pressed={viewMode === "kanban"}
-          onClick={() => setViewMode("kanban")}
-        >
-          Kanban
-        </button>
+      <div className="view-toggle-row">
+        <div className="apartments-view-toggle" role="tablist" aria-label="View mode">
+          <button
+            type="button"
+            className={viewMode === "list" ? "view-toggle-btn active" : "view-toggle-btn"}
+            aria-pressed={viewMode === "list"}
+            onClick={() => setViewMode("list")}
+          >
+            List
+          </button>
+          <button
+            type="button"
+            className={viewMode === "kanban" ? "view-toggle-btn active" : "view-toggle-btn"}
+            aria-pressed={viewMode === "kanban"}
+            onClick={() => setViewMode("kanban")}
+          >
+            Kanban
+          </button>
+        </div>
+
+        {viewMode === "kanban" && (
+          <ColumnVisibilityMenu
+            statuses={TASK_STATUSES}
+            labels={TASK_STATUS_LABELS}
+            hidden={settings.hiddenTaskKanbanColumns}
+            onChange={(hiddenTaskKanbanColumns) => updateSettings({ hiddenTaskKanbanColumns })}
+          />
+        )}
       </div>
 
       {viewMode === "list" ? (

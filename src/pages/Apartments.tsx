@@ -5,10 +5,13 @@ import ApartmentListView from "../components/ApartmentListView";
 import ApartmentModal from "../components/ApartmentModal";
 import StatusChangeModal from "../components/StatusChangeModal";
 import FilterBar from "../components/FilterBar";
+import ColumnVisibilityMenu from "../components/ColumnVisibilityMenu";
+import { useSettings } from "../settings/useSettings";
 import { listApartments } from "../data/apartments";
 import { getUnresolvedActions } from "../data/actions";
 import { sortApartments } from "../utils/apartmentSort";
 import type { ApartmentSortOption } from "../utils/apartmentSort";
+import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { Apartment, ApartmentStatus } from "../types";
 
 type ModalState =
@@ -21,6 +24,7 @@ type ViewMode = "list" | "kanban";
 function Apartments() {
   const apartments = useLiveQuery(() => listApartments(), []);
   const unresolvedActions = useLiveQuery(() => getUnresolvedActions(), []);
+  const { settings, updateSettings } = useSettings();
   const [modalState, setModalState] = useState<ModalState>(null);
   const [search, setSearch] = useState("");
   const [onlyUnresolved, setOnlyUnresolved] = useState(false);
@@ -80,23 +84,34 @@ function Apartments() {
         showStatusAndSort={viewMode === "list"}
       />
 
-      <div className="apartments-view-toggle" role="tablist" aria-label="View mode">
-        <button
-          type="button"
-          className={viewMode === "list" ? "view-toggle-btn active" : "view-toggle-btn"}
-          aria-pressed={viewMode === "list"}
-          onClick={() => setViewMode("list")}
-        >
-          List
-        </button>
-        <button
-          type="button"
-          className={viewMode === "kanban" ? "view-toggle-btn active" : "view-toggle-btn"}
-          aria-pressed={viewMode === "kanban"}
-          onClick={() => setViewMode("kanban")}
-        >
-          Kanban
-        </button>
+      <div className="view-toggle-row">
+        <div className="apartments-view-toggle" role="tablist" aria-label="View mode">
+          <button
+            type="button"
+            className={viewMode === "list" ? "view-toggle-btn active" : "view-toggle-btn"}
+            aria-pressed={viewMode === "list"}
+            onClick={() => setViewMode("list")}
+          >
+            List
+          </button>
+          <button
+            type="button"
+            className={viewMode === "kanban" ? "view-toggle-btn active" : "view-toggle-btn"}
+            aria-pressed={viewMode === "kanban"}
+            onClick={() => setViewMode("kanban")}
+          >
+            Kanban
+          </button>
+        </div>
+
+        {viewMode === "kanban" && (
+          <ColumnVisibilityMenu
+            statuses={APARTMENT_STATUSES}
+            labels={APARTMENT_STATUS_LABELS}
+            hidden={settings.hiddenKanbanColumns}
+            onChange={(hiddenKanbanColumns) => updateSettings({ hiddenKanbanColumns })}
+          />
+        )}
       </div>
 
       {viewMode === "list" ? (

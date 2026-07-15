@@ -3,7 +3,6 @@ import type { DragEvent } from "react";
 import { APARTMENT_STATUSES, APARTMENT_STATUS_LABELS } from "../types";
 import type { Apartment, ApartmentStatus } from "../types";
 import ApartmentCard from "./ApartmentCard";
-import ColumnVisibilityMenu from "./ColumnVisibilityMenu";
 import { useSettings } from "../settings/useSettings";
 
 interface KanbanBoardProps {
@@ -12,7 +11,7 @@ interface KanbanBoardProps {
 }
 
 function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
-  const { settings, updateSettings } = useSettings();
+  const { settings } = useSettings();
   const visibleStatuses = APARTMENT_STATUSES.filter(
     (status) => !settings.hiddenKanbanColumns.includes(status),
   );
@@ -39,15 +38,6 @@ function KanbanBoard({ apartments, onStatusChange }: KanbanBoardProps) {
 
   return (
     <div>
-      <div className="kanban-toolbar">
-        <ColumnVisibilityMenu
-          statuses={APARTMENT_STATUSES}
-          labels={APARTMENT_STATUS_LABELS}
-          hidden={settings.hiddenKanbanColumns}
-          onChange={(hiddenKanbanColumns) => updateSettings({ hiddenKanbanColumns })}
-        />
-      </div>
-
       {visibleStatuses.length === 0 ? (
         <p className="empty-column">All columns are hidden. Use the columns menu above to show some.</p>
       ) : (
