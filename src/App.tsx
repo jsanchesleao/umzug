@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { BrowserRouter, Routes, Route, useLocation, useSearchParams } from "react-router-dom";
 import Dashboard from "./pages/Dashboard.tsx";
 import Apartments from "./pages/Apartments.tsx";
 import ApartmentDetail from "./pages/ApartmentDetail.tsx";
@@ -15,7 +15,26 @@ import { VaultProvider } from "./documents/VaultProvider.tsx";
 
 function AppShell() {
   const [optionsOpen, setOptionsOpen] = useState(false);
+  const [initialBackupReceiveCode, setInitialBackupReceiveCode] = useState<string | undefined>(undefined);
   const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  // A scanned full-backup QR code deep-links back into the app with
+  // ?p2pbackup=<code> regardless of which page is currently open, so it's
+  // parsed here rather than by a single page's toolbar.
+  useEffect(() => {
+    const code = searchParams.get("p2pbackup");
+    if (code) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- syncing to an external system (the URL) on mount, not deriving render state
+      setInitialBackupReceiveCode(code);
+      setOptionsOpen(true);
+      setSearchParams((params) => {
+        params.delete("p2pbackup");
+        return params;
+      }, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const menu =
     location.pathname === "/apartments" ? (
@@ -39,7 +58,15 @@ function AppShell() {
         <Route path="/documents" element={<Documents />} />
       </Routes>
 
-      {optionsOpen && <OptionsModal onClose={() => setOptionsOpen(false)} />}
+      {optionsOpen && (
+        <OptionsModal
+          initialBackupReceiveCode={initialBackupReceiveCode}
+          onClose={() => {
+            setOptionsOpen(false);
+            setInitialBackupReceiveCode(undefined);
+          }}
+        />
+      )}
     </VaultProvider>
   );
 }

@@ -1,5 +1,20 @@
+import { useRef, useState } from "react";
 import Modal from "./Modal";
+import ImportCollisionDialog from "./ImportCollisionDialog";
+import FullBackupSendModal from "./FullBackupSendModal";
+import FullBackupReceiveModal from "./FullBackupReceiveModal";
 import { useSettings } from "../settings/useSettings";
+import { useVault } from "../documents/useVault";
+import { downloadJson, type CollisionResolution } from "../data/importExport";
+import {
+  buildFullBackup,
+  countCollisions,
+  describeFullBackupOutcome,
+  detectFullBackupCollisions,
+  importFullBackup,
+  parseFullBackupPayload,
+  type ExportedBackup,
+} from "../data/fullBackup";
 import {
   CURRENCY_CODES,
   CURRENCY_LABELS,
@@ -12,10 +27,90 @@ import type { CurrencyCode, DateFormatOption, ThemeMode } from "../types";
 
 interface OptionsModalProps {
   onClose: () => void;
+  initialBackupReceiveCode?: string;
 }
 
-function OptionsModal({ onClose }: OptionsModalProps) {
+type BackupStatus = { type: "error" | "success"; message: string } | null;
+
+interface PendingBackupImport {
+  backup: ExportedBackup;
+  collisionCount: number;
+}
+
+function pluralize(count: number, noun: string): string {
+  return `${count} ${noun}${count === 1 ? "" : "s"}`;
+}
+
+function OptionsModal({ onClose, initialBackupReceiveCode }: OptionsModalProps) {
   const { settings, updateSettings } = useSettings();
+  const vault = useVault();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [backupStatus, setBackupStatus] = useState<BackupStatus>(null);
+  const [pendingImport, setPendingImport] = useState<PendingBackupImport | null>(null);
+  const [backupModal, setBackupModal] = useState<"send" | "receive" | null>(
+    initialBackupReceiveCode ? "receive" : null,
+  );
+
+  const vaultForExport =
+    vault.status === "unlocked" && vault.index ? { index: vault.index, getBytes: vault.getBytes } : undefined;
+  const vaultForImport = vault.status === "unlocked" ? { addFiles: vault.addFiles } : undefined;
+
+  async function handleExportAll() {
+    const backup = await buildFullBackup({
+      includePhotos: true,
+      includeSketches: true,
+      documents: vaultForExport,
+    });
+    downloadJson(`umzug-backup-${new Date().toISOString().slice(0, 10)}.json`, backup);
+    const counts = `${pluralize(backup.apartments.length, "apartment")}, ${pluralize(backup.tasks.length, "task")}, ${pluralize(backup.dashboardNotes.length, "note")}`;
+    setBackupStatus({
+      type: "success",
+      message: vaultForExport
+        ? `Exported ${counts}, ${pluralize(backup.documents.length, "document")}.`
+        : `Exported ${counts}. Documents skipped — unlock the vault to include them.`,
+    });
+  }
+
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    setBackupStatus(null);
+    try {
+      const text = await file.text();
+      const backup = parseFullBackupPayload(text);
+      const collisions = await detectFullBackupCollisions(backup);
+      const collisionCount = countCollisions(collisions);
+      if (collisionCount > 0) {
+        setPendingImport({ backup, collisionCount });
+        return;
+      }
+
+      const outcome = await importFullBackup(backup, "copy", vaultForImport);
+      setBackupStatus({ type: "success", message: describeFullBackupOutcome(outcome) });
+    } catch (error) {
+      setBackupStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Import failed.",
+      });
+    }
+  }
+
+  async function handleResolveCollisions(resolution: CollisionResolution) {
+    if (!pendingImport) return;
+    try {
+      const outcome = await importFullBackup(pendingImport.backup, resolution, vaultForImport);
+      setBackupStatus({ type: "success", message: describeFullBackupOutcome(outcome) });
+    } catch (error) {
+      setBackupStatus({
+        type: "error",
+        message: error instanceof Error ? error.message : "Import failed.",
+      });
+    } finally {
+      setPendingImport(null);
+    }
+  }
 
   return (
     <Modal title="Options" onClose={onClose}>
@@ -73,11 +168,67 @@ function OptionsModal({ onClose }: OptionsModalProps) {
         Ignore touch input while sketching (palm rejection)
       </label>
 
+      <hr />
+
+      <h3>Backup</h3>
+      <p>Export or transfer everything — apartments, tasks, notes, and vault documents — at once.</p>
+
+      <div className="options-backup-actions">
+        <button type="button" className="btn" onClick={handleExportAll}>
+          Export all data
+        </button>
+        <button type="button" className="btn" onClick={() => fileInputRef.current?.click()}>
+          Import from file
+        </button>
+        <button type="button" className="btn" onClick={() => setBackupModal("send")}>
+          Send to another device
+        </button>
+        <button type="button" className="btn" onClick={() => setBackupModal("receive")}>
+          Receive from another device
+        </button>
+      </div>
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="application/json,.json"
+        className="visually-hidden"
+        aria-label="Import a full backup from a JSON file"
+        onChange={handleFileChange}
+      />
+
+      {backupStatus && (
+        <div className={backupStatus.type === "error" ? "banner banner-error" : "banner banner-success"}>
+          {backupStatus.message}
+          <button
+            type="button"
+            className="banner-dismiss"
+            aria-label="Dismiss"
+            onClick={() => setBackupStatus(null)}
+          >
+            ×
+          </button>
+        </div>
+      )}
+
       <div className="modal-actions">
         <button type="button" className="btn btn-primary" onClick={onClose}>
           Done
         </button>
       </div>
+
+      {pendingImport && (
+        <ImportCollisionDialog
+          count={pendingImport.collisionCount}
+          entityLabel="item"
+          onResolve={handleResolveCollisions}
+          onCancel={() => setPendingImport(null)}
+        />
+      )}
+
+      {backupModal === "send" && <FullBackupSendModal onClose={() => setBackupModal(null)} />}
+      {backupModal === "receive" && (
+        <FullBackupReceiveModal initialCode={initialBackupReceiveCode} onClose={() => setBackupModal(null)} />
+      )}
     </Modal>
   );
 }

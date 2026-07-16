@@ -1066,6 +1066,13 @@ button {
   margin-top: 1rem;
 }
 
+.options-backup-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 0.75rem 0;
+}
+
 .modal-overlay--fullscreen {
   padding: 0;
 }
