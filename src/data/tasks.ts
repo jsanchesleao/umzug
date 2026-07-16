@@ -23,9 +23,17 @@ export async function updateTask(id: string, patch: Partial<TaskInput>): Promise
 }
 
 export async function deleteTaskCascade(id: string): Promise<void> {
-  await db.transaction("rw", db.tasks, db.taskEvents, db.taskActions, async () => {
-    await db.taskActions.where("taskId").equals(id).delete();
-    await db.taskEvents.where("taskId").equals(id).delete();
-    await db.tasks.delete(id);
-  });
+  await db.transaction(
+    "rw",
+    db.tasks,
+    db.taskEvents,
+    db.taskActions,
+    db.taskFloatingNotes,
+    async () => {
+      await db.taskActions.where("taskId").equals(id).delete();
+      await db.taskEvents.where("taskId").equals(id).delete();
+      await db.taskFloatingNotes.where("taskId").equals(id).delete();
+      await db.tasks.delete(id);
+    },
+  );
 }

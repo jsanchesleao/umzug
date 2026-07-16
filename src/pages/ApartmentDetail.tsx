@@ -3,6 +3,12 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { deleteApartmentCascade, getApartment, updateApartment } from "../data/apartments";
 import { listActionsForApartment } from "../data/actions";
+import {
+  createApartmentFloatingNote,
+  deleteApartmentFloatingNote,
+  listApartmentFloatingNotes,
+  updateApartmentFloatingNote,
+} from "../data/apartmentFloatingNotes";
 import { buildApartmentExport, downloadJson } from "../data/importExport";
 import ApartmentModal from "../components/ApartmentModal";
 import P2PSendModal from "../components/P2PSendModal";
@@ -16,6 +22,8 @@ import TimelineSection from "../components/TimelineSection";
 import PhotoSection from "../components/PhotoSection";
 import SketchSection from "../components/SketchSection";
 import CollapsibleSection from "../components/CollapsibleSection";
+import FloatingNotesSection from "../components/FloatingNotesSection";
+import FloatingNotesOverlay from "../components/FloatingNotesOverlay";
 import { formatRent } from "../utils/rent";
 import { formatDate, formatDateTime } from "../utils/date";
 import { buildGoogleMapsUrl } from "../utils/maps";
@@ -33,6 +41,7 @@ function ApartmentDetail() {
     const all = await listActionsForApartment(id);
     return all.filter((action) => action.eventId === null);
   }, [id]);
+  const floatingNotes = useLiveQuery(() => (id ? listApartmentFloatingNotes(id) : []), [id]) ?? [];
 
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -80,6 +89,28 @@ function ApartmentDetail() {
   async function handleDelete() {
     await deleteApartmentCascade(apartment!.id);
     navigate("/");
+  }
+
+  async function handleCreateFloatingNote(input: {
+    kind: "text" | "sketch";
+    text: string | null;
+    blob: Blob | null;
+    x: number;
+    y: number;
+  }) {
+    await createApartmentFloatingNote({ apartmentId: apartment!.id, ...input });
+  }
+  async function handleUpdateFloatingNoteText(noteId: string, text: string) {
+    await updateApartmentFloatingNote(noteId, { text });
+  }
+  async function handleUpdateFloatingNoteSketch(noteId: string, blob: Blob) {
+    await updateApartmentFloatingNote(noteId, { blob });
+  }
+  async function handleMoveFloatingNote(noteId: string, x: number, y: number) {
+    await updateApartmentFloatingNote(noteId, { x, y });
+  }
+  async function handleDeleteFloatingNote(noteId: string) {
+    await deleteApartmentFloatingNote(noteId);
   }
 
   async function handleExport() {
@@ -248,8 +279,25 @@ function ApartmentDetail() {
               emptyLabel="No actions on this apartment yet."
             />
           </CollapsibleSection>
+
+          <FloatingNotesSection
+            entityId={apartment.id}
+            notes={floatingNotes}
+            onCreate={handleCreateFloatingNote}
+            onUpdateText={handleUpdateFloatingNoteText}
+            onUpdateSketch={handleUpdateFloatingNoteSketch}
+            onDelete={handleDeleteFloatingNote}
+          />
         </div>
       </div>
+
+      <FloatingNotesOverlay
+        notes={floatingNotes}
+        onUpdateText={handleUpdateFloatingNoteText}
+        onUpdateSketch={handleUpdateFloatingNoteSketch}
+        onMove={handleMoveFloatingNote}
+        onDelete={handleDeleteFloatingNote}
+      />
 
       {editing && <ApartmentModal apartment={apartment} onClose={() => setEditing(false)} />}
 
@@ -272,7 +320,7 @@ function ApartmentDetail() {
       {confirmingDelete && (
         <ConfirmDialog
           title="Delete apartment"
-          message={`Delete ${apartment.title}? This will also delete its timeline events, actions, photos, and sketches. This cannot be undone.`}
+          message={`Delete ${apartment.title}? This will also delete its timeline events, actions, photos, sketches, and floating notes. This cannot be undone.`}
           confirmLabel="Delete"
           danger
           onConfirm={handleDelete}

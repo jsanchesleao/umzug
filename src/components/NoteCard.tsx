@@ -1,12 +1,17 @@
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import ConfirmDialog from "./ConfirmDialog";
 import TextNoteModal from "./TextNoteModal";
 import NoteSketchPad from "./NoteSketchPad";
-import { deleteDashboardNote } from "../data/dashboardNotes";
-import type { DashboardNote } from "../types";
+import type { NoteLike } from "../types";
 
 interface NoteCardProps {
-  note: DashboardNote;
+  note: NoteLike;
+  onSubmitText: (text: string) => Promise<void>;
+  onSubmitSketch: (blob: Blob) => Promise<void>;
+  onDelete: () => Promise<void>;
+  style?: CSSProperties;
+  className?: string;
 }
 
 // A stable pseudo-random rotation per note (derived from its id) so cards read as
@@ -18,7 +23,7 @@ function rotationForId(id: string): number {
   return (Math.abs(hash) % (range * 2 + 1)) - range;
 }
 
-function NoteCard({ note }: NoteCardProps) {
+function NoteCard({ note, onSubmitText, onSubmitSketch, onDelete, style, className }: NoteCardProps) {
   const [url, setUrl] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -32,15 +37,15 @@ function NoteCard({ note }: NoteCardProps) {
   }, [note.kind, note.blob]);
 
   async function handleDelete() {
-    await deleteDashboardNote(note.id);
+    await onDelete();
     setConfirmingDelete(false);
   }
 
   return (
     <>
       <div
-        className={`note-card note-color-${note.color}`}
-        style={{ transform: `rotate(${rotationForId(note.id)}deg)` }}
+        className={`note-card note-color-${note.color}${className ? ` ${className}` : ""}`}
+        style={{ transform: `rotate(${rotationForId(note.id)}deg)`, ...style }}
         role="button"
         tabIndex={0}
         onClick={() => setEditing(true)}
@@ -68,8 +73,12 @@ function NoteCard({ note }: NoteCardProps) {
         )}
       </div>
 
-      {editing && note.kind === "text" && <TextNoteModal note={note} onClose={() => setEditing(false)} />}
-      {editing && note.kind === "sketch" && <NoteSketchPad note={note} onClose={() => setEditing(false)} />}
+      {editing && note.kind === "text" && (
+        <TextNoteModal note={note} onClose={() => setEditing(false)} onSubmit={onSubmitText} onDelete={onDelete} />
+      )}
+      {editing && note.kind === "sketch" && (
+        <NoteSketchPad note={note} onClose={() => setEditing(false)} onSubmit={onSubmitSketch} onDelete={onDelete} />
+      )}
 
       {confirmingDelete && (
         <ConfirmDialog

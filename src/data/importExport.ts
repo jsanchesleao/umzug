@@ -4,14 +4,18 @@ import { listTimelineEventsForApartment } from "./timelineEvents";
 import { listActionsForApartment } from "./actions";
 import { listPhotosForApartment } from "./photos";
 import { listSketchPagesForApartment } from "./sketchPages";
+import { listApartmentFloatingNotes } from "./apartmentFloatingNotes";
 import {
   ACTION_STATUSES,
   ACTION_URGENCIES,
   APARTMENT_STATUSES,
+  NOTE_COLORS,
   type Action,
   type ActionStatus,
   type ActionUrgency,
   type ApartmentStatus,
+  type DashboardNoteKind,
+  type NoteColor,
 } from "../types";
 
 export interface ExportedAction {
@@ -42,6 +46,18 @@ export interface ExportedSketchPage {
   dataUrl: string;
 }
 
+export interface ExportedFloatingNote {
+  id: string;
+  kind: DashboardNoteKind;
+  text: string | null;
+  dataUrl: string | null; // null for kind "text"
+  color: NoteColor;
+  x: number;
+  y: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ExportedApartment {
   id: string;
   title: string;
@@ -60,6 +76,7 @@ export interface ExportedApartment {
   actions: ExportedAction[];
   photos: ExportedPhoto[];
   sketches: ExportedSketchPage[];
+  floatingNotes: ExportedFloatingNote[];
 }
 
 function toExportedAction(action: Action): ExportedAction {
@@ -72,7 +89,7 @@ function toExportedAction(action: Action): ExportedAction {
   };
 }
 
-function blobToDataUrl(blob: Blob): Promise<string> {
+export function blobToDataUrl(blob: Blob): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(reader.result as string);
@@ -81,7 +98,7 @@ function blobToDataUrl(blob: Blob): Promise<string> {
   });
 }
 
-async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+export async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
   const response = await fetch(dataUrl);
   return response.blob();
 }
@@ -94,11 +111,12 @@ export async function buildApartmentExport(
   const apartment = await getApartment(apartmentId);
   if (!apartment) throw new Error(`Apartment ${apartmentId} not found`);
 
-  const [events, allActions, photos, sketchPages] = await Promise.all([
+  const [events, allActions, photos, sketchPages, floatingNotes] = await Promise.all([
     listTimelineEventsForApartment(apartmentId),
     listActionsForApartment(apartmentId),
     includePhotos ? listPhotosForApartment(apartmentId) : Promise.resolve([]),
     includeSketches ? listSketchPagesForApartment(apartmentId) : Promise.resolve([]),
+    listApartmentFloatingNotes(apartmentId),
   ]);
 
   const timeline: ExportedTimelineEvent[] = events.map((event) => ({
@@ -127,6 +145,20 @@ export async function buildApartmentExport(
     })),
   );
 
+  const exportedFloatingNotes: ExportedFloatingNote[] = await Promise.all(
+    floatingNotes.map(async (note) => ({
+      id: note.id,
+      kind: note.kind,
+      text: note.text,
+      dataUrl: note.blob ? await blobToDataUrl(note.blob) : null,
+      color: note.color,
+      x: note.x,
+      y: note.y,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+    })),
+  );
+
   return {
     id: apartment.id,
     title: apartment.title,
@@ -145,6 +177,7 @@ export async function buildApartmentExport(
     actions: directActions,
     photos: exportedPhotos,
     sketches: exportedSketches,
+    floatingNotes: exportedFloatingNotes,
   };
 }
 
@@ -222,6 +255,21 @@ function isExportedSketchPage(value: unknown): value is ExportedSketchPage {
   );
 }
 
+function isExportedFloatingNote(value: unknown): value is ExportedFloatingNote {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    (value.kind === "text" || value.kind === "sketch") &&
+    (value.text === null || typeof value.text === "string") &&
+    (value.dataUrl === null || typeof value.dataUrl === "string") &&
+    NOTE_COLORS.includes(value.color as NoteColor) &&
+    typeof value.x === "number" &&
+    typeof value.y === "number" &&
+    typeof value.createdAt === "string" &&
+    typeof value.updatedAt === "string"
+  );
+}
+
 function isExportedApartment(value: unknown): value is ExportedApartment {
   if (!isRecord(value)) return false;
   return (
@@ -245,7 +293,9 @@ function isExportedApartment(value: unknown): value is ExportedApartment {
     Array.isArray(value.photos) &&
     value.photos.every(isExportedPhoto) &&
     Array.isArray(value.sketches) &&
-    value.sketches.every(isExportedSketchPage)
+    value.sketches.every(isExportedSketchPage) &&
+    Array.isArray(value.floatingNotes) &&
+    value.floatingNotes.every(isExportedFloatingNote)
   );
 }
 
@@ -292,6 +342,18 @@ function normalizeLegacySketches(value: unknown): unknown {
 }
 
 /**
+ * Older export files predate the `floatingNotes` field. Default to an empty
+ * array so those files still import cleanly.
+ */
+function normalizeLegacyFloatingNotes(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  if (!Array.isArray(value.floatingNotes)) {
+    return { ...value, floatingNotes: [] };
+  }
+  return value;
+}
+
+/**
  * Parses raw import-file text into a list of apartments, detecting whether the
  * file holds a single apartment (object) or a bulk export (array). Throws on
  * malformed JSON or a shape that doesn't match the export schema — callers
@@ -311,7 +373,8 @@ export function parseImportPayload(text: string): ExportedApartment[] {
   const normalized = candidates
     .map(normalizeLegacyRent)
     .map(normalizeLegacyTitle)
-    .map(normalizeLegacySketches);
+    .map(normalizeLegacySketches)
+    .map(normalizeLegacyFloatingNotes);
 
   if (!normalized.every(isExportedApartment)) {
     throw new Error("File does not match the expected apartment export shape.");
@@ -358,6 +421,7 @@ export async function importApartments(
   // causes the transaction to auto-commit early.
   const photoBlobs = new Map<string, Blob>();
   const sketchBlobs = new Map<string, Blob>();
+  const floatingNoteBlobs = new Map<string, Blob>();
   await Promise.all([
     ...apartments.flatMap((apartment) =>
       apartment.photos.map(async (photo) => {
@@ -369,15 +433,18 @@ export async function importApartments(
         sketchBlobs.set(page.dataUrl, await dataUrlToBlob(page.dataUrl));
       }),
     ),
+    ...apartments.flatMap((apartment) =>
+      apartment.floatingNotes
+        .filter((note) => note.dataUrl !== null)
+        .map(async (note) => {
+          floatingNoteBlobs.set(note.dataUrl!, await dataUrlToBlob(note.dataUrl!));
+        }),
+    ),
   ]);
 
   await db.transaction(
     "rw",
-    db.apartments,
-    db.timelineEvents,
-    db.actions,
-    db.photos,
-    db.sketchPages,
+    [db.apartments, db.timelineEvents, db.actions, db.photos, db.sketchPages, db.apartmentFloatingNotes],
     async () => {
       for (const exported of apartments) {
         const existing = await db.apartments.get(exported.id);
@@ -390,6 +457,7 @@ export async function importApartments(
             await db.timelineEvents.where("apartmentId").equals(exported.id).delete();
             await db.photos.where("apartmentId").equals(exported.id).delete();
             await db.sketchPages.where("apartmentId").equals(exported.id).delete();
+            await db.apartmentFloatingNotes.where("apartmentId").equals(exported.id).delete();
             await db.apartments.delete(exported.id);
             outcome.overwritten++;
           } else {
@@ -471,6 +539,21 @@ export async function importApartments(
             blob: sketchBlobs.get(page.dataUrl)!,
             createdAt: now,
             updatedAt: now,
+          });
+        }
+
+        for (const note of exported.floatingNotes) {
+          await db.apartmentFloatingNotes.add({
+            id: regenerateNestedIds ? crypto.randomUUID() : note.id,
+            apartmentId,
+            kind: note.kind,
+            text: note.text,
+            blob: note.dataUrl ? floatingNoteBlobs.get(note.dataUrl)! : null,
+            color: note.color,
+            x: note.x,
+            y: note.y,
+            createdAt: note.createdAt,
+            updatedAt: note.updatedAt,
           });
         }
       }

@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import Modal from "./Modal";
 import ConfirmDialog from "./ConfirmDialog";
-import { createDashboardNote, deleteDashboardNote, updateDashboardNote } from "../data/dashboardNotes";
 import { useSettings } from "../settings/useSettings";
-import type { DashboardNote } from "../types";
+import type { NoteLike } from "../types";
 
 interface NoteSketchPadProps {
-  note?: DashboardNote;
+  note?: NoteLike;
   onClose: () => void;
+  onSubmit: (blob: Blob) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }
 
 type Tool = "pen" | "eraser";
@@ -28,7 +29,7 @@ function strokeWidthFromPressure(pressure: number, scale: number, pointerType: s
   return width * scale;
 }
 
-function NoteSketchPad({ note, onClose }: NoteSketchPadProps) {
+function NoteSketchPad({ note, onClose, onSubmit, onDelete }: NoteSketchPadProps) {
   const { settings } = useSettings();
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const drawingRef = useRef<{ x: number; y: number } | null>(null);
@@ -187,11 +188,7 @@ function NoteSketchPad({ note, onClose }: NoteSketchPadProps) {
     try {
       const blob = await new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, "image/png"));
       if (!blob) throw new Error("Failed to encode sketch note");
-      if (note) {
-        await updateDashboardNote(note.id, { blob });
-      } else {
-        await createDashboardNote({ kind: "sketch", text: null, blob });
-      }
+      await onSubmit(blob);
       onClose();
     } finally {
       setSaving(false);
@@ -199,8 +196,8 @@ function NoteSketchPad({ note, onClose }: NoteSketchPadProps) {
   }
 
   async function handleDelete() {
-    if (!note) return;
-    await deleteDashboardNote(note.id);
+    if (!onDelete) return;
+    await onDelete();
     onClose();
   }
 
@@ -260,7 +257,7 @@ function NoteSketchPad({ note, onClose }: NoteSketchPadProps) {
             Undo
           </button>
         </div>
-        {note && (
+        {note && onDelete && (
           <div className="sketch-toolbar-group">
             <button type="button" className="btn btn-sm btn-danger" onClick={() => setConfirmingDelete(true)}>
               Delete

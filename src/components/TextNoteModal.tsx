@@ -1,15 +1,16 @@
 import { useState } from "react";
 import Modal from "./Modal";
 import ConfirmDialog from "./ConfirmDialog";
-import { createDashboardNote, deleteDashboardNote, updateDashboardNote } from "../data/dashboardNotes";
-import type { DashboardNote } from "../types";
+import type { NoteLike } from "../types";
 
 interface TextNoteModalProps {
-  note?: DashboardNote;
+  note?: NoteLike;
   onClose: () => void;
+  onSubmit: (text: string) => Promise<void>;
+  onDelete?: () => Promise<void>;
 }
 
-function TextNoteModal({ note, onClose }: TextNoteModalProps) {
+function TextNoteModal({ note, onClose, onSubmit, onDelete }: TextNoteModalProps) {
   const [text, setText] = useState(note?.text ?? "");
   const [saving, setSaving] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -20,11 +21,7 @@ function TextNoteModal({ note, onClose }: TextNoteModalProps) {
     if (!trimmed) return;
     setSaving(true);
     try {
-      if (note) {
-        await updateDashboardNote(note.id, { text: trimmed });
-      } else {
-        await createDashboardNote({ kind: "text", text: trimmed, blob: null });
-      }
+      await onSubmit(trimmed);
       onClose();
     } finally {
       setSaving(false);
@@ -32,8 +29,8 @@ function TextNoteModal({ note, onClose }: TextNoteModalProps) {
   }
 
   async function handleDelete() {
-    if (!note) return;
-    await deleteDashboardNote(note.id);
+    if (!onDelete) return;
+    await onDelete();
     onClose();
   }
 
@@ -63,7 +60,7 @@ function TextNoteModal({ note, onClose }: TextNoteModalProps) {
           />
         </div>
         <div className="modal-actions">
-          {note && (
+          {note && onDelete && (
             <button
               type="button"
               className="btn btn-danger"

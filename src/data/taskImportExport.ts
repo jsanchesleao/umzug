@@ -2,16 +2,20 @@ import { db } from "./db";
 import { getTask, listTasks } from "./tasks";
 import { listTaskEventsForTask } from "./taskEvents";
 import { listTaskActionsForTask } from "./taskActions";
+import { listTaskFloatingNotes } from "./taskFloatingNotes";
 import {
   ACTION_STATUSES,
   ACTION_URGENCIES,
+  NOTE_COLORS,
   TASK_STATUSES,
   type ActionStatus,
   type ActionUrgency,
+  type DashboardNoteKind,
+  type NoteColor,
   type TaskAction,
   type TaskStatus,
 } from "../types";
-import type { CollisionResolution, ImportOutcome } from "./importExport";
+import { blobToDataUrl, dataUrlToBlob, type CollisionResolution, type ImportOutcome } from "./importExport";
 
 export interface ExportedTaskAction {
   id: string;
@@ -29,6 +33,18 @@ export interface ExportedTaskEvent {
   actions: ExportedTaskAction[];
 }
 
+export interface ExportedTaskFloatingNote {
+  id: string;
+  kind: DashboardNoteKind;
+  text: string | null;
+  dataUrl: string | null; // null for kind "text"
+  color: NoteColor;
+  x: number;
+  y: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface ExportedTask {
   id: string;
   title: string;
@@ -38,6 +54,7 @@ export interface ExportedTask {
   updatedAt: string;
   timeline: ExportedTaskEvent[];
   actions: ExportedTaskAction[];
+  floatingNotes: ExportedTaskFloatingNote[];
 }
 
 function toExportedTaskAction(action: TaskAction): ExportedTaskAction {
@@ -54,9 +71,10 @@ export async function buildTaskExport(taskId: string): Promise<ExportedTask> {
   const task = await getTask(taskId);
   if (!task) throw new Error(`Task ${taskId} not found`);
 
-  const [events, allActions] = await Promise.all([
+  const [events, allActions, floatingNotes] = await Promise.all([
     listTaskEventsForTask(taskId),
     listTaskActionsForTask(taskId),
+    listTaskFloatingNotes(taskId),
   ]);
 
   const timeline: ExportedTaskEvent[] = events.map((event) => ({
@@ -71,6 +89,20 @@ export async function buildTaskExport(taskId: string): Promise<ExportedTask> {
     .filter((action) => action.eventId === null)
     .map(toExportedTaskAction);
 
+  const exportedFloatingNotes: ExportedTaskFloatingNote[] = await Promise.all(
+    floatingNotes.map(async (note) => ({
+      id: note.id,
+      kind: note.kind,
+      text: note.text,
+      dataUrl: note.blob ? await blobToDataUrl(note.blob) : null,
+      color: note.color,
+      x: note.x,
+      y: note.y,
+      createdAt: note.createdAt,
+      updatedAt: note.updatedAt,
+    })),
+  );
+
   return {
     id: task.id,
     title: task.title,
@@ -80,6 +112,7 @@ export async function buildTaskExport(taskId: string): Promise<ExportedTask> {
     updatedAt: task.updatedAt,
     timeline,
     actions: directActions,
+    floatingNotes: exportedFloatingNotes,
   };
 }
 
@@ -115,6 +148,21 @@ function isExportedTaskEvent(value: unknown): value is ExportedTaskEvent {
   );
 }
 
+function isExportedTaskFloatingNote(value: unknown): value is ExportedTaskFloatingNote {
+  if (!isRecord(value)) return false;
+  return (
+    typeof value.id === "string" &&
+    (value.kind === "text" || value.kind === "sketch") &&
+    (value.text === null || typeof value.text === "string") &&
+    (value.dataUrl === null || typeof value.dataUrl === "string") &&
+    NOTE_COLORS.includes(value.color as NoteColor) &&
+    typeof value.x === "number" &&
+    typeof value.y === "number" &&
+    typeof value.createdAt === "string" &&
+    typeof value.updatedAt === "string"
+  );
+}
+
 function isExportedTask(value: unknown): value is ExportedTask {
   if (!isRecord(value)) return false;
   return (
@@ -127,8 +175,22 @@ function isExportedTask(value: unknown): value is ExportedTask {
     Array.isArray(value.timeline) &&
     value.timeline.every(isExportedTaskEvent) &&
     Array.isArray(value.actions) &&
-    value.actions.every(isExportedTaskAction)
+    value.actions.every(isExportedTaskAction) &&
+    Array.isArray(value.floatingNotes) &&
+    value.floatingNotes.every(isExportedTaskFloatingNote)
   );
+}
+
+/**
+ * Older export files predate the `floatingNotes` field. Default to an empty
+ * array so those files still import cleanly.
+ */
+function normalizeLegacyFloatingNotes(value: unknown): unknown {
+  if (!isRecord(value)) return value;
+  if (!Array.isArray(value.floatingNotes)) {
+    return { ...value, floatingNotes: [] };
+  }
+  return value;
 }
 
 /**
@@ -148,11 +210,13 @@ export function parseTaskImportPayload(text: string): ExportedTask[] {
   const candidates = Array.isArray(parsed) ? parsed : [parsed];
   if (candidates.length === 0) return [];
 
-  if (!candidates.every(isExportedTask)) {
+  const normalized = candidates.map(normalizeLegacyFloatingNotes);
+
+  if (!normalized.every(isExportedTask)) {
     throw new Error("File does not match the expected task export shape.");
   }
 
-  return candidates;
+  return normalized;
 }
 
 export async function detectTaskCollisions(tasks: ExportedTask[]): Promise<string[]> {
@@ -172,7 +236,21 @@ export async function importTasks(
 ): Promise<ImportOutcome> {
   const outcome: ImportOutcome = { inserted: 0, overwritten: 0, copied: 0 };
 
-  await db.transaction("rw", db.tasks, db.taskEvents, db.taskActions, async () => {
+  // Resolve sketch-note data URLs to Blobs before opening the transaction:
+  // fetch() isn't tracked by IndexedDB, so awaiting it inside a Dexie
+  // transaction causes the transaction to auto-commit early.
+  const floatingNoteBlobs = new Map<string, Blob>();
+  await Promise.all(
+    tasks.flatMap((task) =>
+      task.floatingNotes
+        .filter((note) => note.dataUrl !== null)
+        .map(async (note) => {
+          floatingNoteBlobs.set(note.dataUrl!, await dataUrlToBlob(note.dataUrl!));
+        }),
+    ),
+  );
+
+  await db.transaction("rw", db.tasks, db.taskEvents, db.taskActions, db.taskFloatingNotes, async () => {
     for (const exported of tasks) {
       const existing = await db.tasks.get(exported.id);
       let taskId = exported.id;
@@ -182,6 +260,7 @@ export async function importTasks(
         if (resolution === "overwrite") {
           await db.taskActions.where("taskId").equals(exported.id).delete();
           await db.taskEvents.where("taskId").equals(exported.id).delete();
+          await db.taskFloatingNotes.where("taskId").equals(exported.id).delete();
           await db.tasks.delete(exported.id);
           outcome.overwritten++;
         } else {
@@ -236,6 +315,21 @@ export async function importTasks(
 
       for (const action of exported.actions) {
         await insertAction(action, null);
+      }
+
+      for (const note of exported.floatingNotes) {
+        await db.taskFloatingNotes.add({
+          id: regenerateNestedIds ? crypto.randomUUID() : note.id,
+          taskId,
+          kind: note.kind,
+          text: note.text,
+          blob: note.dataUrl ? floatingNoteBlobs.get(note.dataUrl)! : null,
+          color: note.color,
+          x: note.x,
+          y: note.y,
+          createdAt: note.createdAt,
+          updatedAt: note.updatedAt,
+        });
       }
     }
   });

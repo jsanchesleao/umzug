@@ -2,9 +2,11 @@ import Dexie, { type Table } from "dexie";
 import type {
   Action,
   Apartment,
+  ApartmentFloatingNote,
   DashboardNote,
   Photo,
   SketchPage,
+  TaskFloatingNote,
   TimelineEvent,
   Task,
   TaskAction,
@@ -21,6 +23,8 @@ class UmzugDB extends Dexie {
   taskEvents!: Table<TaskEvent, string>;
   taskActions!: Table<TaskAction, string>;
   dashboardNotes!: Table<DashboardNote, string>;
+  apartmentFloatingNotes!: Table<ApartmentFloatingNote, string>;
+  taskFloatingNotes!: Table<TaskFloatingNote, string>;
 
   constructor() {
     super("umzug");
@@ -94,6 +98,20 @@ class UmzugDB extends Dexie {
       taskEvents: "id, taskId, date",
       taskActions: "id, taskId, eventId, status, dueDate",
       dashboardNotes: "id, createdAt",
+    });
+
+    this.version(7).stores({
+      apartments: "id, status, entryDate",
+      timelineEvents: "id, apartmentId, date",
+      actions: "id, apartmentId, eventId, status, dueDate",
+      photos: "id, apartmentId",
+      sketchPages: "id, apartmentId",
+      tasks: "id, status",
+      taskEvents: "id, taskId, date",
+      taskActions: "id, taskId, eventId, status, dueDate",
+      dashboardNotes: "id, createdAt",
+      apartmentFloatingNotes: "id, apartmentId, createdAt",
+      taskFloatingNotes: "id, taskId, createdAt",
     });
   }
 }

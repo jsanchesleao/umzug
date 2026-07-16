@@ -4,6 +4,7 @@ import ApartmentModal from "./ApartmentModal";
 import TaskModal from "./TaskModal";
 import TextNoteModal from "./TextNoteModal";
 import NoteSketchPad from "./NoteSketchPad";
+import { createDashboardNote } from "../data/dashboardNotes";
 
 type ModalKind = "apartment" | "task" | "note-text" | "note-sketch" | null;
 
@@ -95,8 +96,22 @@ function DashboardFab() {
           }}
         />
       )}
-      {modal === "note-text" && <TextNoteModal onClose={() => setModal(null)} />}
-      {modal === "note-sketch" && <NoteSketchPad onClose={() => setModal(null)} />}
+      {modal === "note-text" && (
+        <TextNoteModal
+          onClose={() => setModal(null)}
+          onSubmit={async (text) => {
+            await createDashboardNote({ kind: "text", text, blob: null });
+          }}
+        />
+      )}
+      {modal === "note-sketch" && (
+        <NoteSketchPad
+          onClose={() => setModal(null)}
+          onSubmit={async (blob) => {
+            await createDashboardNote({ kind: "sketch", text: null, blob });
+          }}
+        />
+      )}
     </>
   );
 }

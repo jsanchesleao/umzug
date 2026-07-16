@@ -3,6 +3,12 @@ import { Link, useNavigate, useParams } from "react-router-dom";
 import { useLiveQuery } from "dexie-react-hooks";
 import { deleteTaskCascade, getTask, updateTask } from "../data/tasks";
 import { listTaskActionsForTask } from "../data/taskActions";
+import {
+  createTaskFloatingNote,
+  deleteTaskFloatingNote,
+  listTaskFloatingNotes,
+  updateTaskFloatingNote,
+} from "../data/taskFloatingNotes";
 import { buildTaskExport } from "../data/taskImportExport";
 import { downloadJson } from "../data/importExport";
 import TaskModal from "../components/TaskModal";
@@ -14,6 +20,8 @@ import UnresolvedTaskActionsSummary from "../components/UnresolvedTaskActionsSum
 import TaskActionList from "../components/TaskActionList";
 import TaskTimelineSection from "../components/TaskTimelineSection";
 import CollapsibleSection from "../components/CollapsibleSection";
+import FloatingNotesSection from "../components/FloatingNotesSection";
+import FloatingNotesOverlay from "../components/FloatingNotesOverlay";
 import { TASK_STATUSES, TASK_STATUS_LABELS } from "../types";
 import type { TaskStatus } from "../types";
 
@@ -26,6 +34,7 @@ function TaskDetail() {
     const all = await listTaskActionsForTask(id);
     return all.filter((action) => action.eventId === null);
   }, [id]);
+  const floatingNotes = useLiveQuery(() => (id ? listTaskFloatingNotes(id) : []), [id]) ?? [];
 
   const [editing, setEditing] = useState(false);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
@@ -76,6 +85,28 @@ function TaskDetail() {
   async function handleDelete() {
     await deleteTaskCascade(task!.id);
     navigate("/tasks");
+  }
+
+  async function handleCreateFloatingNote(input: {
+    kind: "text" | "sketch";
+    text: string | null;
+    blob: Blob | null;
+    x: number;
+    y: number;
+  }) {
+    await createTaskFloatingNote({ taskId: task!.id, ...input });
+  }
+  async function handleUpdateFloatingNoteText(noteId: string, text: string) {
+    await updateTaskFloatingNote(noteId, { text });
+  }
+  async function handleUpdateFloatingNoteSketch(noteId: string, blob: Blob) {
+    await updateTaskFloatingNote(noteId, { blob });
+  }
+  async function handleMoveFloatingNote(noteId: string, x: number, y: number) {
+    await updateTaskFloatingNote(noteId, { x, y });
+  }
+  async function handleDeleteFloatingNote(noteId: string) {
+    await deleteTaskFloatingNote(noteId);
   }
 
   async function handleExport() {
@@ -198,8 +229,25 @@ function TaskDetail() {
               emptyLabel="No actions on this task yet."
             />
           </CollapsibleSection>
+
+          <FloatingNotesSection
+            entityId={task.id}
+            notes={floatingNotes}
+            onCreate={handleCreateFloatingNote}
+            onUpdateText={handleUpdateFloatingNoteText}
+            onUpdateSketch={handleUpdateFloatingNoteSketch}
+            onDelete={handleDeleteFloatingNote}
+          />
         </div>
       </div>
+
+      <FloatingNotesOverlay
+        notes={floatingNotes}
+        onUpdateText={handleUpdateFloatingNoteText}
+        onUpdateSketch={handleUpdateFloatingNoteSketch}
+        onMove={handleMoveFloatingNote}
+        onDelete={handleDeleteFloatingNote}
+      />
 
       {editing && <TaskModal task={task} onClose={() => setEditing(false)} />}
 
@@ -210,7 +258,7 @@ function TaskDetail() {
       {confirmingDelete && (
         <ConfirmDialog
           title="Delete task"
-          message={`Delete ${task.title}? This will also delete its timeline events and actions. This cannot be undone.`}
+          message={`Delete ${task.title}? This will also delete its timeline events, actions, and floating notes. This cannot be undone.`}
           confirmLabel="Delete"
           danger
           onConfirm={handleDelete}

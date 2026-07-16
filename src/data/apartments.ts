@@ -33,16 +33,13 @@ export async function updateApartment(
 export async function deleteApartmentCascade(id: string): Promise<void> {
   await db.transaction(
     "rw",
-    db.apartments,
-    db.timelineEvents,
-    db.actions,
-    db.photos,
-    db.sketchPages,
+    [db.apartments, db.timelineEvents, db.actions, db.photos, db.sketchPages, db.apartmentFloatingNotes],
     async () => {
       await db.actions.where("apartmentId").equals(id).delete();
       await db.timelineEvents.where("apartmentId").equals(id).delete();
       await db.photos.where("apartmentId").equals(id).delete();
       await db.sketchPages.where("apartmentId").equals(id).delete();
+      await db.apartmentFloatingNotes.where("apartmentId").equals(id).delete();
       await db.apartments.delete(id);
     },
   );

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { ReactNode } from "react";
 
 interface ModalProps {
@@ -11,9 +11,22 @@ interface ModalProps {
 const FOCUSABLE_SELECTOR =
   'a[href], button:not([disabled]), textarea:not([disabled]), input:not([disabled]), select:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
+// Tracks which mounted Modal is topmost so a nested Modal (e.g. an edit modal
+// opened from within a fullscreen list modal) only lets the topmost instance
+// react to Escape/Tab — otherwise both layers would close on one Escape press.
+let modalStack: symbol[] = [];
+
 function Modal({ title, onClose, children, variant = "default" }: ModalProps) {
   const isFullscreen = variant === "fullscreen";
   const modalRef = useRef<HTMLDivElement>(null);
+  const [id] = useState<symbol>(() => Symbol());
+
+  useEffect(() => {
+    modalStack.push(id);
+    return () => {
+      modalStack = modalStack.filter((entry) => entry !== id);
+    };
+  }, [id]);
 
   // Move focus into the dialog on open (unless a control inside it already
   // grabbed focus via autoFocus) and hand it back to whatever triggered the
@@ -33,6 +46,7 @@ function Modal({ title, onClose, children, variant = "default" }: ModalProps) {
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
+      if (modalStack[modalStack.length - 1] !== id) return;
       if (event.key === "Escape") {
         onClose();
         return;
@@ -59,7 +73,7 @@ function Modal({ title, onClose, children, variant = "default" }: ModalProps) {
     }
     document.addEventListener("keydown", handleKeyDown);
     return () => document.removeEventListener("keydown", handleKeyDown);
-  }, [onClose]);
+  }, [onClose, id]);
 
   return (
     <div

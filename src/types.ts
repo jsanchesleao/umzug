@@ -145,6 +145,32 @@ export interface DashboardNote {
   updatedAt: string;
 }
 
+// Structural subset shared by DashboardNote and the floating-note variants below,
+// so NoteCard/TextNoteModal/NoteSketchPad can render/edit any of them without a
+// dependency on a specific entity type.
+export interface NoteLike {
+  id: string;
+  kind: DashboardNoteKind;
+  text: string | null;
+  blob: Blob | null;
+  color: NoteColor;
+}
+
+export interface FloatingNoteBase extends NoteLike {
+  x: number;
+  y: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ApartmentFloatingNote extends FloatingNoteBase {
+  apartmentId: string;
+}
+
+export interface TaskFloatingNote extends FloatingNoteBase {
+  taskId: string;
+}
+
 export type ThemeMode = "system" | "light" | "dark";
 
 export const THEME_MODES: ThemeMode[] = ["system", "light", "dark"];
