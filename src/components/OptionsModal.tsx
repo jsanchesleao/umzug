@@ -1,8 +1,12 @@
-import { useRef, useState } from "react";
+import { lazy, Suspense, useRef, useState } from "react";
 import Modal from "./Modal";
 import ImportCollisionDialog from "./ImportCollisionDialog";
 import FullBackupSendModal from "./FullBackupSendModal";
 import FullBackupReceiveModal from "./FullBackupReceiveModal";
+
+// Lazy-loaded so the Firebase SDK is only fetched when this optional feature
+// is actually used, instead of ballooning the app-shell bundle for everyone.
+const FirebaseSyncModal = lazy(() => import("./FirebaseSyncModal"));
 import { useSettings } from "../settings/useSettings";
 import { useVault } from "../documents/useVault";
 import { downloadJson, type CollisionResolution } from "../data/importExport";
@@ -50,6 +54,7 @@ function OptionsModal({ onClose, initialBackupReceiveCode }: OptionsModalProps) 
   const [backupModal, setBackupModal] = useState<"send" | "receive" | null>(
     initialBackupReceiveCode ? "receive" : null,
   );
+  const [firebaseSyncOpen, setFirebaseSyncOpen] = useState(false);
 
   const vaultForExport =
     vault.status === "unlocked" && vault.index ? { index: vault.index, getBytes: vault.getBytes } : undefined;
@@ -196,6 +201,16 @@ function OptionsModal({ onClose, initialBackupReceiveCode }: OptionsModalProps) 
         onChange={handleFileChange}
       />
 
+      <hr />
+
+      <h3>Cloud backup</h3>
+      <p>Back up or restore apartments, tasks, and notes via a Google-signed-in Firebase account (photos aren't included).</p>
+      <div className="options-backup-actions">
+        <button type="button" className="btn" onClick={() => setFirebaseSyncOpen(true)}>
+          Cloud backup (Google)
+        </button>
+      </div>
+
       {backupStatus && (
         <div className={backupStatus.type === "error" ? "banner banner-error" : "banner banner-success"}>
           {backupStatus.message}
@@ -228,6 +243,11 @@ function OptionsModal({ onClose, initialBackupReceiveCode }: OptionsModalProps) 
       {backupModal === "send" && <FullBackupSendModal onClose={() => setBackupModal(null)} />}
       {backupModal === "receive" && (
         <FullBackupReceiveModal initialCode={initialBackupReceiveCode} onClose={() => setBackupModal(null)} />
+      )}
+      {firebaseSyncOpen && (
+        <Suspense fallback={null}>
+          <FirebaseSyncModal onClose={() => setFirebaseSyncOpen(false)} />
+        </Suspense>
       )}
     </Modal>
   );
