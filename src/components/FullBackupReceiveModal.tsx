@@ -33,7 +33,7 @@ type ReceiveState =
   | { phase: "receiving-core" }
   | { phase: "collision"; backup: ExportedBackup; collisionCount: number }
   | { phase: "receiving-docs"; received: number; total: number; count: number }
-  | { phase: "done"; outcome: FullBackupOutcome; documentsReceived: number }
+  | { phase: "done"; outcome: FullBackupOutcome; documentsReceived: number; keptExistingMedia: boolean }
   | { phase: "error"; message: string };
 
 function FullBackupReceiveModal({ initialCode, onClose }: FullBackupReceiveModalProps) {
@@ -53,6 +53,7 @@ function FullBackupReceiveModal({ initialCode, onClose }: FullBackupReceiveModal
     vaultRef.current = vault;
   }, [vault]);
   const outcomeRef = useRef<FullBackupOutcome | null>(null);
+  const keptExistingMediaRef = useRef(false);
 
   function wireDocReceiver(conn: DataConnection) {
     createDocReceiver(conn, {
@@ -74,7 +75,12 @@ function FullBackupReceiveModal({ initialCode, onClose }: FullBackupReceiveModal
       onAllPersisted: (count) => {
         setState((prev) =>
           prev.phase === "receiving-docs"
-            ? { phase: "done", outcome: outcomeRef.current!, documentsReceived: count }
+            ? {
+                phase: "done",
+                outcome: outcomeRef.current!,
+                documentsReceived: count,
+                keptExistingMedia: keptExistingMediaRef.current,
+              }
             : prev,
         );
       },
@@ -84,21 +90,33 @@ function FullBackupReceiveModal({ initialCode, onClose }: FullBackupReceiveModal
     });
   }
 
-  async function finishImport(conn: DataConnection, backup: ExportedBackup, resolution: CollisionResolution) {
+  async function finishImport(
+    conn: DataConnection,
+    backup: ExportedBackup,
+    resolution: CollisionResolution,
+    keepExistingMedia = false,
+  ) {
     try {
       const canReceiveDocuments = vaultRef.current.status === "unlocked";
       const outcome = await importFullBackup(
         backup,
         resolution,
         canReceiveDocuments ? { addFiles: vaultRef.current.addFiles } : undefined,
+        keepExistingMedia,
       );
       outcomeRef.current = outcome;
+      keptExistingMediaRef.current = resolution === "overwrite" && keepExistingMedia;
       conn.send({ type: "ack", outcome, canReceiveDocuments } satisfies BackupMessage);
       if (canReceiveDocuments) {
         setState({ phase: "receiving-docs", received: 0, total: 0, count: 0 });
         wireDocReceiver(conn);
       } else {
-        setState({ phase: "done", outcome, documentsReceived: 0 });
+        setState({
+          phase: "done",
+          outcome,
+          documentsReceived: 0,
+          keptExistingMedia: keptExistingMediaRef.current,
+        });
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : "Import failed.";
@@ -204,11 +222,11 @@ function FullBackupReceiveModal({ initialCode, onClose }: FullBackupReceiveModal
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.phase]);
 
-  async function handleResolveCollisions(resolution: CollisionResolution) {
+  async function handleResolveCollisions(resolution: CollisionResolution, keepExistingMedia: boolean) {
     if (state.phase !== "collision") return;
     const conn = connRef.current;
     if (!conn) return;
-    await finishImport(conn, state.backup, resolution);
+    await finishImport(conn, state.backup, resolution, keepExistingMedia);
   }
 
   function handleManualSubmit(event: React.FormEvent) {
@@ -295,8 +313,9 @@ function FullBackupReceiveModal({ initialCode, onClose }: FullBackupReceiveModal
         <p>
           Received — {describeFullBackupOutcome(state.outcome)}{" "}
           {state.documentsReceived > 0
-            ? `${state.documentsReceived} document${state.documentsReceived === 1 ? "" : "s"} received.`
+            ? `${state.documentsReceived} document${state.documentsReceived === 1 ? "" : "s"} received. `
             : ""}
+          {state.keptExistingMedia ? "Existing photos and sketches were kept." : ""}
         </p>
       )}
       {state.phase === "error" && <div className="banner banner-error">{state.message}</div>}
@@ -313,6 +332,7 @@ function FullBackupReceiveModal({ initialCode, onClose }: FullBackupReceiveModal
         <ImportCollisionDialog
           count={state.collisionCount}
           entityLabel="item"
+          showKeepMediaOption
           onResolve={handleResolveCollisions}
           onCancel={onClose}
         />

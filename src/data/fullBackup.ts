@@ -145,8 +145,9 @@ export async function importFullBackup(
       folder: string,
     ) => Promise<void>;
   },
+  keepExistingMedia = false,
 ): Promise<FullBackupOutcome> {
-  const apartments = await importApartments(backup.apartments, resolution);
+  const apartments = await importApartments(backup.apartments, resolution, keepExistingMedia);
   const tasks = await importTasks(backup.tasks, resolution);
   const dashboardNotes = await importDashboardNotes(backup.dashboardNotes, resolution);
 

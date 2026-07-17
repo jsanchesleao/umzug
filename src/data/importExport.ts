@@ -413,6 +413,7 @@ export function describeOutcome(outcome: ImportOutcome): string {
 export async function importApartments(
   apartments: ExportedApartment[],
   resolution: CollisionResolution,
+  keepExistingMedia = false,
 ): Promise<ImportOutcome> {
   const outcome: ImportOutcome = { inserted: 0, overwritten: 0, copied: 0 };
 
@@ -450,13 +451,16 @@ export async function importApartments(
         const existing = await db.apartments.get(exported.id);
         let apartmentId = exported.id;
         let regenerateNestedIds = false;
+        const skipMedia = Boolean(existing) && resolution === "overwrite" && keepExistingMedia;
 
         if (existing) {
           if (resolution === "overwrite") {
             await db.actions.where("apartmentId").equals(exported.id).delete();
             await db.timelineEvents.where("apartmentId").equals(exported.id).delete();
-            await db.photos.where("apartmentId").equals(exported.id).delete();
-            await db.sketchPages.where("apartmentId").equals(exported.id).delete();
+            if (!keepExistingMedia) {
+              await db.photos.where("apartmentId").equals(exported.id).delete();
+              await db.sketchPages.where("apartmentId").equals(exported.id).delete();
+            }
             await db.apartmentFloatingNotes.where("apartmentId").equals(exported.id).delete();
             await db.apartments.delete(exported.id);
             outcome.overwritten++;
@@ -521,25 +525,27 @@ export async function importApartments(
           await insertAction(action, null);
         }
 
-        for (const photo of exported.photos) {
-          await db.photos.add({
-            id: regenerateNestedIds ? crypto.randomUUID() : photo.id,
-            apartmentId,
-            caption: photo.caption,
-            blob: photoBlobs.get(photo.dataUrl)!,
-            createdAt: now,
-          });
-        }
+        if (!skipMedia) {
+          for (const photo of exported.photos) {
+            await db.photos.add({
+              id: regenerateNestedIds ? crypto.randomUUID() : photo.id,
+              apartmentId,
+              caption: photo.caption,
+              blob: photoBlobs.get(photo.dataUrl)!,
+              createdAt: now,
+            });
+          }
 
-        for (const page of exported.sketches) {
-          await db.sketchPages.add({
-            id: regenerateNestedIds ? crypto.randomUUID() : page.id,
-            apartmentId,
-            order: page.order,
-            blob: sketchBlobs.get(page.dataUrl)!,
-            createdAt: now,
-            updatedAt: now,
-          });
+          for (const page of exported.sketches) {
+            await db.sketchPages.add({
+              id: regenerateNestedIds ? crypto.randomUUID() : page.id,
+              apartmentId,
+              order: page.order,
+              blob: sketchBlobs.get(page.dataUrl)!,
+              createdAt: now,
+              updatedAt: now,
+            });
+          }
         }
 
         for (const note of exported.floatingNotes) {

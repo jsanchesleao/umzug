@@ -127,11 +127,15 @@ function FirebaseSyncModal({ onClose }: FirebaseSyncModalProps) {
     }
   }
 
-  async function handleResolveCollisions(resolution: CollisionResolution) {
+  async function handleResolveCollisions(resolution: CollisionResolution, keepExistingMedia: boolean) {
     if (phase.kind !== "collision") return;
     try {
-      const outcome = await importFullBackup(phase.backup, resolution);
-      setPhase({ kind: "done", message: describeFullBackupOutcome(outcome) });
+      const outcome = await importFullBackup(phase.backup, resolution, undefined, keepExistingMedia);
+      const message =
+        resolution === "overwrite" && keepExistingMedia
+          ? `${describeFullBackupOutcome(outcome)} Existing photos and sketches were kept.`
+          : describeFullBackupOutcome(outcome);
+      setPhase({ kind: "done", message });
     } catch (error) {
       setPhase({ kind: "error", message: error instanceof Error ? error.message : "Restore failed." });
     }
@@ -192,6 +196,7 @@ function FirebaseSyncModal({ onClose }: FirebaseSyncModalProps) {
             <ImportCollisionDialog
               count={phase.collisionCount}
               entityLabel="item"
+              showKeepMediaOption
               onResolve={handleResolveCollisions}
               onCancel={onClose}
             />
